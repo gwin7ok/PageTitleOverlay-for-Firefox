@@ -1,7 +1,7 @@
 @echo off
-rem Build an .xpi (zip) for this extension folder.
+rem Build an .xpi from files in the dist/ folder.
 setlocal
-set SRC=%~dp0
+set SRC=%~dp0dist
 rem Remove trailing backslash from SRC if present
 if "%SRC:~-1%"=="\" set SRC=%SRC:~0,-1%
 
@@ -13,9 +13,10 @@ if defined ARG (
 	)
 )
 
-set OUT=%SRC%\extension.xpi
+rem Default output to repository root extension.xpi
+set OUT=%~dp0extension.xpi
 if not "%ARG%"=="" set OUT=%~1
-echo Creating XPI: %OUT%
+echo Creating XPI from %SRC% -> %OUT%
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_xpi.ps1" "%SRC%" "%OUT%"
 echo Done.
 endlocal
