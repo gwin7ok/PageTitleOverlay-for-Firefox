@@ -1,0 +1,153 @@
+(function () {
+  var ID = 'status-title-overlay';
+  if (document.getElementById(ID)) return;
+
+  var panel = document.createElement('div');
+  panel.id = ID;
+  panel.setAttribute('role', 'status');
+  panel.style.pointerEvents = 'none';
+
+  var label = document.createElement('span');
+  label.id = 'status-title-label';
+  panel.appendChild(label);
+
+  (document.body || document.documentElement).appendChild(panel);
+
+  var cachedRect = { left: 0, top: 0, right: 0, bottom: 0 };
+  var isShiftPressed = false;
+  var hasNoTitle = false;
+
+  function debugLog(msg) {
+    // console.debug('[StatusTitle][content] ' + msg);
+  }
+
+  function refreshMemory() {
+    if (hasNoTitle) return;
+    var origDisplay = panel.style.display;
+    panel.style.removeProperty('display');
+    panel.style.removeProperty('visibility');
+
+    var rect = panel.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      cachedRect = {
+        left: Math.floor(rect.left) - 3,
+        top: Math.floor(rect.top) - 3,
+        right: Math.ceil(rect.right) + 3,
+        bottom: Math.ceil(rect.bottom) + 3
+      };
+      debugLog('width:' + Math.round(rect.width) + ' L:' + cachedRect.left + ' R:' + cachedRect.right);
+    }
+
+    try { panel.style.display = origDisplay; } catch (e) { }
+  }
+
+  function updateMargin() {
+    var isFullscreen = !!(document.fullscreenElement || (window.fullScreen && window.fullScreen === true));
+    if (isFullscreen) {
+      panel.style.setProperty('margin', '0', 'important');
+    } else {
+      panel.style.removeProperty('margin');
+    }
+    setTimeout(refreshMemory, 150);
+  }
+
+  function updateVisibility(e) {
+    var mouseX = e && typeof e.clientX === 'number' ? e.clientX : -1;
+    var mouseY = e && typeof e.clientY === 'number' ? e.clientY : -1;
+    var isMouseInside = (
+      mouseX >= cachedRect.left && mouseX <= cachedRect.right &&
+      mouseY >= cachedRect.top && mouseY <= cachedRect.bottom
+    );
+
+    var shouldHide = isMouseInside || isShiftPressed || hasNoTitle;
+    if (shouldHide && !panel.hasAttribute('force-hide')) {
+      panel.setAttribute('force-hide', 'true');
+      debugLog('hide');
+    } else if (!shouldHide && panel.hasAttribute('force-hide')) {
+      panel.removeAttribute('force-hide');
+      debugLog('show');
+    }
+  }
+
+  window.addEventListener('mousemove', function (e) { updateVisibility(e); }, false);
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'Shift' && !isShiftPressed) { isShiftPressed = true; updateVisibility(); }
+  }, true);
+  window.addEventListener('keyup', function (e) {
+    if (e.key === 'Shift') { isShiftPressed = false; updateVisibility(); }
+  }, true);
+  window.addEventListener('blur', function () { isShiftPressed = false; updateVisibility(); });
+  window.addEventListener('resize', updateMargin);
+  document.addEventListener('fullscreenchange', updateMargin);
+
+  function update() {
+    var rawTitle = document.title;
+    var newHasNoTitle = (!rawTitle || rawTitle === 'No Title');
+
+    if (label.textContent !== (rawTitle || '') || hasNoTitle !== newHasNoTitle) {
+      hasNoTitle = newHasNoTitle;
+      label.textContent = rawTitle || '';
+
+      if (!hasNoTitle) {
+        setTimeout(refreshMemory, 100);
+      }
+      updateVisibility();
+    }
+  }
+
+  document.addEventListener('visibilitychange', update);
+  window.addEventListener('focus', update);
+  setInterval(update, 3000);
+
+  function applyPosition(pos) {
+    panel.style.removeProperty('left');
+    panel.style.removeProperty('right');
+    panel.style.removeProperty('top');
+    panel.style.removeProperty('bottom');
+    if (pos === 'left-top') {
+      panel.style.setProperty('left', '8px', 'important');
+      panel.style.setProperty('top', '8px', 'important');
+    } else if (pos === 'right-top') {
+      panel.style.setProperty('right', '8px', 'important');
+      panel.style.setProperty('top', '8px', 'important');
+    } else if (pos === 'right-bottom') {
+      panel.style.setProperty('right', '8px', 'important');
+      panel.style.setProperty('bottom', '30px', 'important');
+    } else {
+      panel.style.setProperty('left', '8px', 'important');
+      panel.style.setProperty('bottom', '30px', 'important');
+    }
+    setTimeout(refreshMemory, 120);
+  }
+
+  (function initPosition() {
+    try {
+      var storageAPI = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : ((typeof chrome !== 'undefined' && chrome.storage) ? chrome.storage : null);
+      if (storageAPI && storageAPI.local) {
+        try {
+          var maybePromise = storageAPI.local.get({ position: 'left-bottom' });
+          if (maybePromise && typeof maybePromise.then === 'function') {
+            maybePromise.then(function (res) { applyPosition((res && res.position) || 'left-bottom'); }).catch(function () { applyPosition('left-bottom'); });
+          } else {
+            storageAPI.local.get({ position: 'left-bottom' }, function (res) { applyPosition((res && res.position) || 'left-bottom'); });
+          }
+        } catch (e) { applyPosition('left-bottom'); }
+
+        try {
+          if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
+            browser.storage.onChanged.addListener(function (changes, area) { if (area === 'local' && changes.position) applyPosition(changes.position.newValue); });
+          } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+            chrome.storage.onChanged.addListener(function (changes, area) { if (area === 'local' && changes.position) applyPosition(changes.position.newValue); });
+          }
+        } catch (e) { }
+      } else {
+        applyPosition('left-bottom');
+      }
+    } catch (e) {
+      applyPosition('left-bottom');
+    }
+  })();
+
+  updateMargin();
+  update();
+})();
