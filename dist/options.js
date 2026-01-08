@@ -4,6 +4,7 @@
   var status = document.getElementById('status');
   var enabledOn = document.getElementById('enabled_on');
   var enabledOff = document.getElementById('enabled_off');
+  var fontInput = document.getElementById('fontSize');
   var colorForm = document.getElementById('colorForm');
   var statusColors = document.getElementById('statusColors');
   var bgInput = document.getElementById('bgColor');
@@ -26,7 +27,7 @@
     var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
     if (storage && storage.local) {
       try {
-        var defaults = { position: DEFAULT, bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0, enabled: true };
+        var defaults = { position: DEFAULT, bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0, enabled: true, fontSize: 14 };
         if (storage.local.get.length === 1) {
           storage.local.get(defaults, function (res) {
             setChecked((res && res.position) || DEFAULT);
@@ -38,6 +39,7 @@
               if (enabledOn) enabledOn.checked = !!res.enabled;
               if (enabledOff) enabledOff.checked = !res.enabled;
             }
+            if (fontInput && typeof res.fontSize !== 'undefined' && !fontTouched) { fontInput.value = parseInt(res.fontSize, 10) || 14; try { document.body.style.fontSize = (parseInt(fontInput.value, 10) || 14) + 'px'; } catch (e) { } }
           });
         } else {
           storage.local.get(defaults).then(function (res) {
@@ -50,10 +52,11 @@
               if (enabledOn) enabledOn.checked = !!res.enabled;
               if (enabledOff) enabledOff.checked = !res.enabled;
             }
+            if (fontInput && typeof res.fontSize !== 'undefined' && !fontTouched) { fontInput.value = parseInt(res.fontSize, 10) || 14; try { document.body.style.fontSize = (parseInt(fontInput.value, 10) || 14) + 'px'; } catch (e) { } }
           });
         }
       } catch (e) {
-        try { storage.local.get({ position: DEFAULT, enabled: true }, function (res) { setChecked((res && res.position) || DEFAULT); if (typeof res.enabled !== 'undefined') { if (enabledOn) enabledOn.checked = !!res.enabled; if (enabledOff) enabledOff.checked = !res.enabled; } }); } catch (e) { setChecked(DEFAULT); }
+        try { storage.local.get({ position: DEFAULT, enabled: true, fontSize: 14 }, function (res) { setChecked((res && res.position) || DEFAULT); if (typeof res.enabled !== 'undefined') { if (enabledOn) enabledOn.checked = !!res.enabled; if (enabledOff) enabledOff.checked = !res.enabled; } if (fontInput && typeof res.fontSize !== 'undefined' && !fontTouched) { fontInput.value = parseInt(res.fontSize, 10) || 14; try { document.body.style.fontSize = (parseInt(fontInput.value, 10) || 14) + 'px'; } catch (e) { } } }); } catch (e) { setChecked(DEFAULT); }
       }
     } else {
       setChecked(DEFAULT);
@@ -63,8 +66,32 @@
       if (textAlphaInput) textAlphaInput.value = 0; if (textAlphaVal) textAlphaVal.textContent = 0;
       // ensure default enabled when no stored value
       if (enabledOn) enabledOn.checked = true;
+      // default font size when no stored value
+      if (fontInput) { fontInput.value = 14; try { document.body.style.fontSize = '14px'; } catch (e) { } }
     }
   }
+
+  // helper: robust storage.set that supports Promise and callback styles
+  function storageSet(obj, cb) {
+    var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
+    if (!storage || !storage.local) {
+      if (cb) cb(new Error('no storage'));
+      return;
+    }
+    try {
+      var ret = storage.local.set(obj);
+      if (ret && typeof ret.then === 'function') {
+        ret.then(function () { if (cb) cb(null); }).catch(function (err) { if (cb) cb(err || new Error('set failed')); });
+        return;
+      }
+    } catch (e) { }
+    try {
+      storage.local.set(obj, function () { if (cb) cb(null); });
+    } catch (e) { if (cb) cb(e || new Error('set failed')); }
+  }
+
+  // track if user has interacted with font input to avoid overwriting with async load
+  var fontTouched = false;
 
   function save(e) {
     e.preventDefault();
@@ -74,14 +101,8 @@
     var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
     if (storage && storage.local) {
       try {
-        if (storage.local.set.length === 1) {
-          storage.local.set({ position: val }, function () { status.textContent = '保存しました'; setTimeout(function () { status.textContent = ''; }, 1500); });
-        } else {
-          storage.local.set({ position: val }).then(function () { status.textContent = '保存しました'; setTimeout(function () { status.textContent = ''; }, 1500); });
-        }
-      } catch (e) {
-        try { storage.local.set({ position: val }, function () { status.textContent = '保存しました'; setTimeout(function () { status.textContent = ''; }, 1500); }); } catch (e) { status.textContent = '保存に失敗しました'; setTimeout(function () { status.textContent = ''; }, 1500); }
-      }
+        storageSet({ position: val }, function (err) { if (!err) { status.textContent = '保存しました'; setTimeout(function () { status.textContent = ''; }, 1500); } else { status.textContent = '保存に失敗しました'; setTimeout(function () { status.textContent = ''; }, 1500); } });
+      } catch (e) { status.textContent = '保存に失敗しました'; setTimeout(function () { status.textContent = ''; }, 1500); }
     } else {
       status.textContent = '保存できませんでした';
       setTimeout(function () { status.textContent = ''; }, 1500);
@@ -98,14 +119,8 @@
     if (storage && storage.local) {
       try {
         var obj = { bgColor: bc, textColor: tc, bgAlpha: a, textAlpha: ta };
-        if (storage.local.set.length === 1) {
-          storage.local.set(obj, function () { statusColors.textContent = '保存しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); });
-        } else {
-          storage.local.set(obj).then(function () { statusColors.textContent = '保存しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); });
-        }
-      } catch (e) {
-        try { storage.local.set(obj, function () { statusColors.textContent = '保存しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); }); } catch (e) { statusColors.textContent = '保存に失敗しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); }
-      }
+        storageSet(obj, function (err) { if (!err) { statusColors.textContent = '保存しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); } else { statusColors.textContent = '保存に失敗しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); } });
+      } catch (e) { statusColors.textContent = '保存に失敗しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); }
     } else {
       statusColors.textContent = '保存できませんでした';
       setTimeout(function () { statusColors.textContent = ''; }, 1500);
@@ -120,15 +135,17 @@
         var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
         if (!storage || !storage.local) return;
         try {
-          if (storage.local.set.length === 1) {
-            storage.local.set({ enabled: !!val }, function () { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); });
-          } else {
-            storage.local.set({ enabled: !!val }).then(function () { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); });
-          }
-        } catch (e) { try { storage.local.set({ enabled: !!val }, function () { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); }); } catch (e) { if (statusAll) statusAll.textContent = '保存に失敗しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); } }
+          storageSet({ enabled: !!val }, function (err) { if (!err) { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); } else { if (statusAll) statusAll.textContent = '保存に失敗しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); } });
+        } catch (e) { if (statusAll) statusAll.textContent = '保存に失敗しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); }
       }
       if (enabledOn) enabledOn.addEventListener('change', function () { if (enabledOn.checked) saveEnabled(true); });
       if (enabledOff) enabledOff.addEventListener('change', function () { if (enabledOff.checked) saveEnabled(false); });
+    } catch (e) { }
+    // live font size preview
+    try {
+      if (fontInput) {
+        fontInput.addEventListener('input', function () { try { fontTouched = true; var v = parseInt(fontInput.value, 10) || 14; document.body.style.fontSize = v + 'px'; } catch (e) { } });
+      }
     } catch (e) { }
     if (colorForm) {
       if (bgAlphaInput && bgAlphaVal) { bgAlphaInput.addEventListener('input', function () { bgAlphaVal.textContent = bgAlphaInput.value; }); }
@@ -177,16 +194,13 @@
             var a = (bgAlphaInput && bgAlphaInput.value) ? parseInt(bgAlphaInput.value, 10) : 60;
             var ta = (textAlphaInput && textAlphaInput.value) ? parseInt(textAlphaInput.value, 10) : 0;
             var enabledVal = (enabledOn && enabledOn.checked) ? true : false;
+            var fz = (fontInput && fontInput.value) ? parseInt(fontInput.value, 10) : 14;
             var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
             if (storage && storage.local) {
               try {
-                var obj = { position: val, bgColor: bc, textColor: tc, bgAlpha: a, textAlpha: ta, enabled: enabledVal };
-                if (storage.local.set.length === 1) {
-                  storage.local.set(obj, function () { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); });
-                } else {
-                  storage.local.set(obj).then(function () { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); });
-                }
-              } catch (e) { try { storage.local.set(obj, function () { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); }); } catch (e) { if (statusAll) statusAll.textContent = '保存に失敗しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); } }
+                var obj = { position: val, bgColor: bc, textColor: tc, bgAlpha: a, textAlpha: ta, enabled: enabledVal, fontSize: fz };
+                storageSet(obj, function (err) { if (!err) { if (statusAll) statusAll.textContent = '保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); } else { if (statusAll) statusAll.textContent = '保存に失敗しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); } });
+              } catch (e) { if (statusAll) statusAll.textContent = '保存に失敗しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); }
             } else { if (statusAll) statusAll.textContent = '保存できませんでした'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); }
           } catch (e) { if (statusAll) statusAll.textContent = '保存に失敗しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1500); }
         });
@@ -203,6 +217,7 @@
           if (changes.textColor && textInput) textInput.value = changes.textColor.newValue || '#ffffff';
           if (changes.bgAlpha && bgAlphaInput) { bgAlphaInput.value = changes.bgAlpha.newValue; if (bgAlphaVal) bgAlphaVal.textContent = changes.bgAlpha.newValue; }
           if (changes.textAlpha && textAlphaInput) { textAlphaInput.value = changes.textAlpha.newValue; if (textAlphaVal) textAlphaVal.textContent = changes.textAlpha.newValue; }
+          if (changes.fontSize && fontInput) { fontInput.value = parseInt(changes.fontSize.newValue, 10) || 14; try { document.body.style.fontSize = (parseInt(fontInput.value, 10) || 14) + 'px'; } catch (e) { } }
           if (changes.enabled) {
             try { if (enabledOn) enabledOn.checked = !!changes.enabled.newValue; if (enabledOff) enabledOff.checked = !changes.enabled.newValue; if (statusAll) statusAll.textContent = '設定を保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); } catch (e) { }
           }

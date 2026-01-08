@@ -13,7 +13,7 @@
   panel.style.padding = '2px 6px';
   panel.style.background = 'rgba(0,0,0,0.6)';
   panel.style.color = '#fff';
-  panel.style.fontSize = '12px';
+  panel.style.fontSize = '14px';
   panel.style.borderRadius = '3px';
   panel.style.width = 'auto';
   panel.style.overflow = 'hidden';
@@ -58,11 +58,11 @@
   if (storage && storage.local) {
     try {
       if (storage.local.get.length === 1) {
-        storage.local.get({ position: DEFAULT, enabled: true }, function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } });
+        storage.local.get({ position: DEFAULT, enabled: true, fontSize: 14 }, function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || 14) + 'px'; } catch (e) { } });
       } else {
-        storage.local.get({ position: DEFAULT, enabled: true }).then(function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } });
+        storage.local.get({ position: DEFAULT, enabled: true, fontSize: 14 }).then(function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || 14) + 'px'; } catch (e) { } });
       }
-    } catch (e) { try { storage.local.get({ position: DEFAULT, enabled: true }, function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } }); } catch (e) { applyPosition(DEFAULT); } }
+    } catch (e) { try { storage.local.get({ position: DEFAULT, enabled: true, fontSize: 14 }, function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || 14) + 'px'; } catch (e) { } }); } catch (e) { applyPosition(DEFAULT); } }
 
     if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
       browser.storage.onChanged.addListener(function (changes, area) {
@@ -72,6 +72,7 @@
           if (changes.enabled) {
             try { if (changes.enabled.newValue) panel.style.display = 'inline-block'; else panel.style.display = 'none'; } catch (e) { }
           }
+          if (changes.fontSize) { try { panel.style.fontSize = (parseInt(changes.fontSize.newValue, 10) || 14) + 'px'; } catch (e) { } }
           if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) {
             // read full stored values to ensure we have matching color+alpha pairs
             try {
