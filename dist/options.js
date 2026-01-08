@@ -124,25 +124,7 @@
         }
       } catch (e) { }
     }
-    // pick buttons (スポイト) - request picker via background
-    try {
-      var picks = document.querySelectorAll('.pick');
-      for (var pi = 0; pi < picks.length; pi++) {
-        (function (btn) {
-          btn.addEventListener('click', function () {
-            var field = btn.getAttribute('data-field');
-            if (!field) return;
-            statusColors.textContent = 'スポイト中…ページをクリックしてください（Escでキャンセル）';
-            try {
-              var runtimeApi = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : (typeof chrome !== 'undefined' ? chrome.runtime : null);
-              if (runtimeApi && runtimeApi.sendMessage) {
-                runtimeApi.sendMessage({ action: 'startPicker', field: field });
-              }
-            } catch (e) { statusColors.textContent = 'スポイトを開始できませんでした'; setTimeout(function () { statusColors.textContent = ''; }, 1500); }
-          });
-        })(picks[pi]);
-      }
-    } catch (e) { }
+    // picker removed: no pick buttons
     // reflect storage changes in UI (when background stores picked colors)
     try {
       var storageApi = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
