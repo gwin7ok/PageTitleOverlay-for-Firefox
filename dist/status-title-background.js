@@ -24,6 +24,25 @@
     chrome.browserAction.onClicked.addListener(openOptions);
   }
 
+  // Create a context menu item when right-clicking the toolbar icon
+  try {
+    var cmApi = (typeof browser !== 'undefined' && browser.contextMenus) ? browser.contextMenus : ((typeof chrome !== 'undefined' && chrome.contextMenus) ? chrome.contextMenus : null);
+    if (cmApi && cmApi.create) {
+      try {
+        // id used to identify clicks
+        var CM_ID = 'status-title-open-options';
+        // remove existing (safe no-op in many implementations)
+        try { if (cmApi.remove) cmApi.remove(CM_ID); } catch (e) { }
+        cmApi.create({ id: CM_ID, title: 'オプションを開く', contexts: ['browser_action'] });
+        if (cmApi.onClicked && cmApi.onClicked.addListener) {
+          cmApi.onClicked.addListener(function (info, tab) {
+            try { if (info && info.menuItemId === CM_ID) openOptions(); } catch (e) { }
+          });
+        }
+      } catch (e) { log('contextMenus.create failed', e && e.message); }
+    }
+  } catch (e) { }
+
   // On startup, attempt to read current theme and log it for debugging
   try {
     var themeApiStartup = (typeof browser !== 'undefined' && browser.theme) ? browser.theme : ((typeof chrome !== 'undefined' && chrome.theme) ? chrome.theme : null);
