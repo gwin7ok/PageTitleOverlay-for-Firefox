@@ -16,11 +16,12 @@
     </div>
     <h1>表示位置</h1>
     <form id="posForm">
-      <label><input type="radio" name="position" value="left-top"> 左上</label><br>
-      <label><input type="radio" name="position" value="right-top"> 右上</label><br>
-      <label><input type="radio" name="position" value="left-bottom"> 左下</label><br>
-      <label><input type="radio" name="position" value="right-bottom"> 右下</label><br>
-
+      <div class="pos-grid" role="radiogroup" aria-label="表示位置">
+        <label class="pos-corner pos-lt"><input type="radio" name="position" value="left-top"> 左上</label>
+        <label class="pos-corner pos-rt"><input type="radio" name="position" value="right-top"> 右上</label>
+        <label class="pos-corner pos-lb"><input type="radio" name="position" value="left-bottom"> 左下</label>
+        <label class="pos-corner pos-rb"><input type="radio" name="position" value="right-bottom"> 右下</label>
+      </div>
     </form>
     <h2>色と透明度</h2>
     <form id="colorForm">
