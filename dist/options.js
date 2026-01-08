@@ -6,8 +6,10 @@
   var statusColors = document.getElementById('statusColors');
   var bgInput = document.getElementById('bgColor');
   var textInput = document.getElementById('textColor');
-  var alphaInput = document.getElementById('alpha');
-  var alphaVal = document.getElementById('alphaVal');
+  var bgAlphaInput = document.getElementById('bgAlpha');
+  var bgAlphaVal = document.getElementById('bgAlphaVal');
+  var textAlphaInput = document.getElementById('textAlpha');
+  var textAlphaVal = document.getElementById('textAlphaVal');
 
   function setChecked(val) {
     var radios = form.elements['position'];
@@ -20,13 +22,14 @@
     var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
     if (storage && storage.local) {
       try {
-        var defaults = { position: DEFAULT, bgColor: '', textColor: '', alpha: 60 };
+        var defaults = { position: DEFAULT, bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0 };
         if (storage.local.get.length === 1) {
           storage.local.get(defaults, function (res) {
             setChecked((res && res.position) || DEFAULT);
             if (bgInput && typeof res.bgColor !== 'undefined') bgInput.value = res.bgColor || '#000000';
             if (textInput && typeof res.textColor !== 'undefined') textInput.value = res.textColor || '#ffffff';
-            if (alphaInput && typeof res.alpha !== 'undefined') { alphaInput.value = res.alpha; if (alphaVal) alphaVal.textContent = res.alpha; }
+            if (bgAlphaInput && typeof res.bgAlpha !== 'undefined') { bgAlphaInput.value = res.bgAlpha; if (bgAlphaVal) bgAlphaVal.textContent = res.bgAlpha; }
+            if (textAlphaInput && typeof res.textAlpha !== 'undefined') { textAlphaInput.value = res.textAlpha; if (textAlphaVal) textAlphaVal.textContent = res.textAlpha; }
           });
         } else {
           storage.local.get(defaults).then(function (res) {
@@ -43,7 +46,8 @@
       setChecked(DEFAULT);
       if (bgInput) bgInput.value = '#000000';
       if (textInput) textInput.value = '#ffffff';
-      if (alphaInput) alphaInput.value = 60; if (alphaVal) alphaVal.textContent = 60;
+      if (bgAlphaInput) bgAlphaInput.value = 60; if (bgAlphaVal) bgAlphaVal.textContent = 60;
+      if (textAlphaInput) textAlphaInput.value = 0; if (textAlphaVal) textAlphaVal.textContent = 0;
     }
   }
 
@@ -73,11 +77,12 @@
     e.preventDefault();
     var bc = (bgInput && bgInput.value) ? bgInput.value : '';
     var tc = (textInput && textInput.value) ? textInput.value : '';
-    var a = (alphaInput && alphaInput.value) ? parseInt(alphaInput.value, 10) : 60;
+    var a = (bgAlphaInput && bgAlphaInput.value) ? parseInt(bgAlphaInput.value, 10) : 60;
+    var ta = (textAlphaInput && textAlphaInput.value) ? parseInt(textAlphaInput.value, 10) : 0;
     var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
     if (storage && storage.local) {
       try {
-        var obj = { bgColor: bc, textColor: tc, alpha: a };
+        var obj = { bgColor: bc, textColor: tc, bgAlpha: a, textAlpha: ta };
         if (storage.local.set.length === 1) {
           storage.local.set(obj, function () { statusColors.textContent = '保存しました'; setTimeout(function () { statusColors.textContent = ''; }, 1500); });
         } else {
@@ -97,9 +102,8 @@
     load();
     if (colorForm) {
       colorForm.addEventListener('submit', saveColors);
-      if (alphaInput && alphaVal) {
-        alphaInput.addEventListener('input', function () { alphaVal.textContent = alphaInput.value; });
-      }
+      if (bgAlphaInput && bgAlphaVal) { bgAlphaInput.addEventListener('input', function () { bgAlphaVal.textContent = bgAlphaInput.value; }); }
+      if (textAlphaInput && textAlphaVal) { textAlphaInput.addEventListener('input', function () { textAlphaVal.textContent = textAlphaInput.value; }); }
       // fetch theme button
       try {
         var fetchBtn = document.getElementById('fetchTheme');
@@ -147,7 +151,8 @@
           if (area !== 'local') return;
           if (changes.bgColor && bgInput) bgInput.value = changes.bgColor.newValue || '#000000';
           if (changes.textColor && textInput) textInput.value = changes.textColor.newValue || '#ffffff';
-          if (changes.alpha && alphaInput) { alphaInput.value = changes.alpha.newValue; if (alphaVal) alphaVal.textContent = changes.alpha.newValue; }
+          if (changes.bgAlpha && bgAlphaInput) { bgAlphaInput.value = changes.bgAlpha.newValue; if (bgAlphaVal) bgAlphaVal.textContent = changes.bgAlpha.newValue; }
+          if (changes.textAlpha && textAlphaInput) { textAlphaInput.value = changes.textAlpha.newValue; if (textAlphaVal) textAlphaVal.textContent = changes.textAlpha.newValue; }
           // if picker stored value, show brief confirmation
           if ((changes.bgColor || changes.textColor) && statusColors) {
             statusColors.textContent = 'スポイトで選択されました';

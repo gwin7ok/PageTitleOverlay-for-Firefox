@@ -85,6 +85,19 @@
                                     preview.style.background = hex;
                                     preview.style.color = (p[0] * 0.299 + p[1] * 0.587 + p[2] * 0.114) > 186 ? '#000' : '#fff';
                                     preview.textContent = hex + ' (' + p[0] + ',' + p[1] + ',' + p[2] + ')';
+                                    // position preview to the right of cursor, clamp to viewport
+                                    try {
+                                        var px = ev.clientX + 16;
+                                        var py = ev.clientY - 20;
+                                        var maxLeft = window.innerWidth - 140;
+                                        var maxTop = window.innerHeight - 44;
+                                        if (px > maxLeft) px = Math.max(8, ev.clientX - 140 - 16);
+                                        if (py < 8) py = 8;
+                                        if (py > maxTop) py = maxTop;
+                                        preview.style.left = px + 'px';
+                                        preview.style.top = py + 'px';
+                                        preview.style.right = 'auto';
+                                    } catch (e) { }
                                 }
                             } catch (e) { }
                         } catch (e) { }
@@ -111,6 +124,14 @@
                     canvas.addEventListener('mousemove', onMove);
                     canvas.addEventListener('click', onClick);
                     window.addEventListener('keydown', onKey);
+                    // listen for stopPicker messages to remove overlay when background requests
+                    try {
+                        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+                            chrome.runtime.onMessage.addListener(function (req) { try { if (req && req.action === 'stopPicker') removeOverlay(); } catch (e) { } });
+                        } else if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.onMessage) {
+                            browser.runtime.onMessage.addListener(function (req) { try { if (req && req.action === 'stopPicker') removeOverlay(); } catch (e) { } });
+                        }
+                    } catch (e) { }
                 } catch (e) {
                     removeOverlay();
                 }

@@ -87,7 +87,7 @@
                   if (theme && theme.colors) {
                     var bg = theme.colors.accentcolor || theme.colors.toolbar || theme.colors.frame || null;
                     var col = theme.colors.textcolor || theme.colors.toolbar_text || null;
-                    if (bg) out.bgColor = bg; if (col) out.textColor = col; out.alpha = 60;
+                    if (bg) out.bgColor = bg; if (col) out.textColor = col; out.bgAlpha = 60; out.textAlpha = 0;
                   }
                   var storageApi = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' && chrome.storage ? chrome.storage : null);
                   if (storageApi && storageApi.local && storageApi.local.set) {

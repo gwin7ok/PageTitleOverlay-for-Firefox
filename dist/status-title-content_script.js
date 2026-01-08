@@ -81,14 +81,14 @@
       browser.storage.onChanged.addListener(function (changes, area) {
         if (area === 'local') {
           if (changes.position) applyPosition(changes.position.newValue);
-          if (changes.bgColor || changes.textColor || changes.alpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.alpha ? changes.alpha.newValue : undefined);
+          if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.bgAlpha ? changes.bgAlpha.newValue : undefined, changes.textAlpha ? changes.textAlpha.newValue : undefined);
         }
       });
     } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
       chrome.storage.onChanged.addListener(function (changes, area) {
         if (area === 'local') {
           if (changes.position) applyPosition(changes.position.newValue);
-          if (changes.bgColor || changes.textColor || changes.alpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.alpha ? changes.alpha.newValue : undefined);
+          if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.bgAlpha ? changes.bgAlpha.newValue : undefined, changes.textAlpha ? changes.textAlpha.newValue : undefined);
         }
       });
     }
@@ -141,13 +141,16 @@
     } catch (e) { return null; }
   }
 
-  function applyStoredColors(bgColor, textColor, alpha) {
+  function applyStoredColors(bgColor, textColor, bgAlpha, textAlpha) {
     try {
       if (bgColor) {
-        var bg = hexToRgba(bgColor, alpha);
+        var bg = hexToRgba(bgColor, bgAlpha);
         if (bg) panel.style.background = bg;
       }
-      if (textColor) panel.style.color = textColor;
+      if (textColor) {
+        var tc = hexToRgba(textColor, textAlpha);
+        if (tc) panel.style.color = tc; else panel.style.color = textColor;
+      }
     } catch (e) { }
   }
 
@@ -167,12 +170,12 @@
               if (col) panel.style.color = col;
             }
             try {
-              var defaults = { position: DEFAULT, bgColor: '', textColor: '', alpha: 60 };
+              var defaults = { position: DEFAULT, bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0 };
               if (storage && storage.local) {
                 if (storage.local.get.length === 1) {
-                  storage.local.get(defaults, function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.alpha); });
+                  storage.local.get(defaults, function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.bgAlpha, sres.textAlpha); });
                 } else {
-                  storage.local.get(defaults).then(function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.alpha); });
+                  storage.local.get(defaults).then(function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.bgAlpha, sres.textAlpha); });
                 }
               }
             } catch (e) { }
@@ -190,9 +193,9 @@
               if (col) panel.style.color = col;
             }
             try {
-              var defaults = { position: DEFAULT, bgColor: '', textColor: '', alpha: 60 };
+              var defaults = { position: DEFAULT, bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0 };
               if (storage && storage.local) {
-                storage.local.get(defaults, function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.alpha); });
+                storage.local.get(defaults, function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.bgAlpha, sres.textAlpha); });
               }
             } catch (e) { }
           });
