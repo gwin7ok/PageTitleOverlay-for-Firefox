@@ -110,10 +110,9 @@
                 try {
                   var out = {};
                   if (theme && theme.colors) {
+                    // only store colors from theme; do NOT overwrite existing alpha settings
                     out.bgColor = pickFirstColor(theme.colors, ['accentcolor', 'toolbar', 'frame', 'tab_background_text']);
                     out.textColor = pickFirstColor(theme.colors, ['toolbar_text', 'tab_background_text', 'bookmark_text', 'textcolor', 'toolbar_field_text']);
-                    out.bgAlpha = 60;
-                    out.textAlpha = 0;
                   }
                   var storageApi = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' && chrome.storage ? chrome.storage : null);
                   if (storageApi && storageApi.local && storageApi.local.set) {
