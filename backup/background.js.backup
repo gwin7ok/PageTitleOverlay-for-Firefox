@@ -1,5 +1,5 @@
 // Open the options page when the toolbar icon is clicked
-(function () {
+(function(){
   function openOptions() {
     if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.openOptionsPage) {
       browser.runtime.openOptionsPage();
@@ -17,7 +17,7 @@
   }
 })();
 // Open the options page when the toolbar icon is clicked
-(function () {
+(function(){
   function openOptions() {
     if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.openOptionsPage) {
       browser.runtime.openOptionsPage();
