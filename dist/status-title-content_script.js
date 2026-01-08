@@ -65,9 +65,44 @@
     } catch (e) { try { storage.local.get({ position: DEFAULT }, function (res) { applyPosition((res && res.position) || DEFAULT); }); } catch (e) { applyPosition(DEFAULT); } }
 
     if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
-      browser.storage.onChanged.addListener(function (changes, area) { if (area === 'local') { if (changes.position) applyPosition(changes.position.newValue); if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.bgAlpha ? changes.bgAlpha.newValue : undefined, changes.textAlpha ? changes.textAlpha.newValue : undefined); } });
+      browser.storage.onChanged.addListener(function (changes, area) {
+        if (area !== 'local') return;
+        try {
+          if (changes.position) applyPosition(changes.position.newValue);
+          if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) {
+            // read full stored values to ensure we have matching color+alpha pairs
+            try {
+              var defaults = { bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0 };
+              if (browser.storage && browser.storage.local && browser.storage.local.get) {
+                if (browser.storage.local.get.length === 1) {
+                  browser.storage.local.get(defaults, function (res) { applyStoredColors(res.bgColor, res.textColor, res.bgAlpha, res.textAlpha); });
+                } else {
+                  browser.storage.local.get(defaults).then(function (res) { applyStoredColors(res.bgColor, res.textColor, res.bgAlpha, res.textAlpha); });
+                }
+              }
+            } catch (e) { }
+          }
+        } catch (e) { }
+      });
     } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
-      chrome.storage.onChanged.addListener(function (changes, area) { if (area === 'local') { if (changes.position) applyPosition(changes.position.newValue); if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.bgAlpha ? changes.bgAlpha.newValue : undefined, changes.textAlpha ? changes.textAlpha.newValue : undefined); } });
+      chrome.storage.onChanged.addListener(function (changes, area) {
+        if (area !== 'local') return;
+        try {
+          if (changes.position) applyPosition(changes.position.newValue);
+          if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) {
+            try {
+              var defaults2 = { bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0 };
+              if (chrome.storage && chrome.storage.local && chrome.storage.local.get) {
+                if (chrome.storage.local.get.length === 1) {
+                  chrome.storage.local.get(defaults2, function (res) { applyStoredColors(res.bgColor, res.textColor, res.bgAlpha, res.textAlpha); });
+                } else {
+                  chrome.storage.local.get(defaults2).then(function (res) { applyStoredColors(res.bgColor, res.textColor, res.bgAlpha, res.textAlpha); });
+                }
+              }
+            } catch (e) { }
+          }
+        } catch (e) { }
+      });
     }
   } else {
     applyPosition(DEFAULT);
