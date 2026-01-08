@@ -6,7 +6,7 @@
       var args = Array.prototype.slice.call(arguments);
       args.unshift(LOG_PREFIX);
       if (console && console.log) console.log.apply(console, args);
-    } catch (e) {}
+    } catch (e) { }
   }
   function openOptions() {
     if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.openOptionsPage) {
@@ -38,7 +38,7 @@
       log('startup: theme API not present');
     }
   } catch (e) { log('startup theme check failed', e && e.message); }
-  
+
   // Respond to content scripts asking for theme colors
   function handleMessage(request, sender, sendResponse) {
     log('handleMessage', request, sender);

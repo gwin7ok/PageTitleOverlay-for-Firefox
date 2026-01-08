@@ -21,6 +21,17 @@
         <span id="status"></span>
       </div>
     </form>
+    <h2>色と透明度</h2>
+    <form id="colorForm">
+      <label>背景色: <input type="color" id="bgColor" name="bgColor" value="#000000"></label><br>
+      <label>文字色: <input type="color" id="textColor" name="textColor" value="#ffffff"></label><br>
+      <label>透明度: <input type="range" id="alpha" name="alpha" min="0" max="100" value="60"> <span
+          id="alphaVal">60</span>%</label>
+      <div class="actions">
+        <button id="saveColors">保存(色)</button>
+        <span id="statusColors"></span>
+      </div>
+    </form>
   </main>
   <script src="options.js"></script>
 </body>

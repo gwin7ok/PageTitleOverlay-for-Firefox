@@ -28,7 +28,7 @@
       var args = Array.prototype.slice.call(arguments);
       args.unshift(LOG_PREFIX);
       if (console && console.log) console.log.apply(console, args);
-    } catch (e) {}
+    } catch (e) { }
   }
   document.body.appendChild(panel);
 
@@ -78,9 +78,19 @@
     }
 
     if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
-      browser.storage.onChanged.addListener(function (changes, area) { if (area === 'local' && changes.position) applyPosition(changes.position.newValue); });
+      browser.storage.onChanged.addListener(function (changes, area) {
+        if (area === 'local') {
+          if (changes.position) applyPosition(changes.position.newValue);
+          if (changes.bgColor || changes.textColor || changes.alpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.alpha ? changes.alpha.newValue : undefined);
+        }
+      });
     } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
-      chrome.storage.onChanged.addListener(function (changes, area) { if (area === 'local' && changes.position) applyPosition(changes.position.newValue); });
+      chrome.storage.onChanged.addListener(function (changes, area) {
+        if (area === 'local') {
+          if (changes.position) applyPosition(changes.position.newValue);
+          if (changes.bgColor || changes.textColor || changes.alpha) applyStoredColors(changes.bgColor ? changes.bgColor.newValue : undefined, changes.textColor ? changes.textColor.newValue : undefined, changes.alpha ? changes.alpha.newValue : undefined);
+        }
+      });
     }
   } else {
     applyPosition(DEFAULT);
@@ -105,8 +115,36 @@
         if (c.length === 4) return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + c[3] + ')';
       }
       if (typeof c === 'string') return c;
-    } catch (e) {}
+    } catch (e) { }
     return null;
+  }
+
+  function hexToRgba(hex, alphaPercent) {
+    try {
+      if (!hex) return null;
+      var h = hex.replace('#', '');
+      if (h.length === 3) { h = h.split('').map(function (s) { return s + s; }).join(''); }
+      if (h.length !== 6) return null;
+      var r = parseInt(h.substring(0, 2), 16);
+      var g = parseInt(h.substring(2, 4), 16);
+      var b = parseInt(h.substring(4, 6), 16);
+      var a = 1;
+      if (typeof alphaPercent !== 'undefined' && alphaPercent !== null) {
+        var ap = parseFloat(alphaPercent);
+        if (!isNaN(ap)) a = Math.max(0, Math.min(100, ap)) / 100;
+      }
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+    } catch (e) { return null; }
+  }
+
+  function applyStoredColors(bgColor, textColor, alpha) {
+    try {
+      if (bgColor) {
+        var bg = hexToRgba(bgColor, alpha);
+        if (bg) panel.style.background = bg;
+      }
+      if (textColor) panel.style.color = textColor;
+    } catch (e) { }
   }
 
   try {
@@ -124,7 +162,17 @@
               if (bg) panel.style.background = bg;
               if (col) panel.style.color = col;
             }
-          }).catch(function () {});
+            try {
+              var defaults = { position: DEFAULT, bgColor: '', textColor: '', alpha: 60 };
+              if (storage && storage.local) {
+                if (storage.local.get.length === 1) {
+                  storage.local.get(defaults, function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.alpha); });
+                } else {
+                  storage.local.get(defaults).then(function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.alpha); });
+                }
+              }
+            } catch (e) { }
+          }).catch(function () { });
         }
       } catch (e) {
         try {
@@ -137,9 +185,15 @@
               if (bg) panel.style.background = bg;
               if (col) panel.style.color = col;
             }
+            try {
+              var defaults = { position: DEFAULT, bgColor: '', textColor: '', alpha: 60 };
+              if (storage && storage.local) {
+                storage.local.get(defaults, function (sres) { applyStoredColors(sres.bgColor, sres.textColor, sres.alpha); });
+              }
+            } catch (e) { }
           });
-        } catch (e) {}
+        } catch (e) { }
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 })();
