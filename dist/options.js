@@ -34,6 +34,10 @@
             if (textInput && typeof res.textColor !== 'undefined') textInput.value = res.textColor || '#ffffff';
             if (bgAlphaInput && typeof res.bgAlpha !== 'undefined') { bgAlphaInput.value = res.bgAlpha; if (bgAlphaVal) bgAlphaVal.textContent = res.bgAlpha; }
             if (textAlphaInput && typeof res.textAlpha !== 'undefined') { textAlphaInput.value = res.textAlpha; if (textAlphaVal) textAlphaVal.textContent = res.textAlpha; }
+            if (typeof res.enabled !== 'undefined') {
+              if (enabledOn) enabledOn.checked = !!res.enabled;
+              if (enabledOff) enabledOff.checked = !res.enabled;
+            }
           });
         } else {
           storage.local.get(defaults).then(function (res) {
@@ -201,9 +205,6 @@
           if (changes.textAlpha && textAlphaInput) { textAlphaInput.value = changes.textAlpha.newValue; if (textAlphaVal) textAlphaVal.textContent = changes.textAlpha.newValue; }
           if (changes.enabled) {
             try { if (enabledOn) enabledOn.checked = !!changes.enabled.newValue; if (enabledOff) enabledOff.checked = !changes.enabled.newValue; if (statusAll) statusAll.textContent = '設定を保存しました'; setTimeout(function () { if (statusAll) statusAll.textContent = ''; }, 1200); } catch (e) { }
-          }
-          if (changes.enabled) {
-            try { if (enabledOn) enabledOn.checked = !!changes.enabled.newValue; if (enabledOff) enabledOff.checked = !changes.enabled.newValue; } catch (e) { }
           }
           // no UI confirmation needed when storage changes from picker/save
         });
