@@ -58,17 +58,20 @@
   if (storage && storage.local) {
     try {
       if (storage.local.get.length === 1) {
-        storage.local.get({ position: DEFAULT }, function (res) { applyPosition((res && res.position) || DEFAULT); });
+        storage.local.get({ position: DEFAULT, enabled: true }, function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } });
       } else {
-        storage.local.get({ position: DEFAULT }).then(function (res) { applyPosition((res && res.position) || DEFAULT); });
+        storage.local.get({ position: DEFAULT, enabled: true }).then(function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } });
       }
-    } catch (e) { try { storage.local.get({ position: DEFAULT }, function (res) { applyPosition((res && res.position) || DEFAULT); }); } catch (e) { applyPosition(DEFAULT); } }
+    } catch (e) { try { storage.local.get({ position: DEFAULT, enabled: true }, function (res) { applyPosition((res && res.position) || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } }); } catch (e) { applyPosition(DEFAULT); } }
 
     if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
       browser.storage.onChanged.addListener(function (changes, area) {
         if (area !== 'local') return;
         try {
           if (changes.position) applyPosition(changes.position.newValue);
+          if (changes.enabled) {
+            try { if (changes.enabled.newValue) panel.style.display = 'inline-block'; else panel.style.display = 'none'; } catch (e) { }
+          }
           if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) {
             // read full stored values to ensure we have matching color+alpha pairs
             try {
@@ -89,6 +92,9 @@
         if (area !== 'local') return;
         try {
           if (changes.position) applyPosition(changes.position.newValue);
+          if (changes.enabled) {
+            try { if (changes.enabled.newValue) panel.style.display = 'inline-block'; else panel.style.display = 'none'; } catch (e) { }
+          }
           if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) {
             try {
               var defaults2 = { bgColor: '', textColor: '', bgAlpha: 60, textAlpha: 0 };

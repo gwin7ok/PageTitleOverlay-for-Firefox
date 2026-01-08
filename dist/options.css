@@ -25,6 +25,20 @@ main {
     gap: 8px;
 }
 
+.save-all {
+    /* place just after forms, not fixed */
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 24px 0;
+}
+
+.save-all button {
+    padding: 8px 18px;
+    font-size: 14px
+}
+
 h1 {
     font-size: 16px;
     margin: 0 0 8px

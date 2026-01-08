@@ -10,16 +10,17 @@
 
 <body>
   <main>
+    <div class="actions">
+      <label><input type="radio" name="enabled" id="enabled_on" value="1"> 有効</label>
+      <label style="margin-left:12px"><input type="radio" name="enabled" id="enabled_off" value="0"> 無効</label>
+    </div>
     <h1>表示位置</h1>
     <form id="posForm">
       <label><input type="radio" name="position" value="left-top"> 左上</label><br>
       <label><input type="radio" name="position" value="right-top"> 右上</label><br>
       <label><input type="radio" name="position" value="left-bottom"> 左下</label><br>
       <label><input type="radio" name="position" value="right-bottom"> 右下</label><br>
-      <div class="actions">
-        <button id="save">保存</button>
-        <span id="status"></span>
-      </div>
+
     </form>
     <h2>色と透明度</h2>
     <form id="colorForm">
@@ -37,11 +38,13 @@
         <button type="button" id="fetchTheme">ブラウザのテーマ色を取得</button>
         <span id="statusFetch"></span>
       </div>
-      <div class="actions">
-        <button id="saveColors">保存(色)</button>
-        <span id="statusColors"></span>
-      </div>
     </form>
+
+    <!-- 統合保存ボタン（画面下部に固定） -->
+    <div class="save-all" id="saveAllContainer">
+      <button id="saveAll">保存</button>
+      <span id="statusAll" style="margin-left:12px"></span>
+    </div>
   </main>
   <script src="options.js"></script>
 </body>
