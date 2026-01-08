@@ -1,21 +1,32 @@
 // Open the options page when the toolbar icon is clicked
 (function () {
-  var LOG_PREFIX = '[StatusTitle]';
+  var LOG_PREFIX = '[status-title]';
   function log() {
     try {
       var args = Array.prototype.slice.call(arguments);
       args.unshift(LOG_PREFIX);
-      if (console && console.log) console.log.apply(console, args);
+      if (console && console.debug) console.debug.apply(console, args);
     } catch (e) { }
   }
   function openOptions() {
-    if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.openOptionsPage) {
-      browser.runtime.openOptionsPage();
-    } else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
-      chrome.runtime.openOptionsPage();
-    } else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.create) {
-      chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
-    }
+    try {
+      if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.openOptionsPage) {
+        log('openOptions via browser.runtime.openOptionsPage');
+        browser.runtime.openOptionsPage();
+        return;
+      }
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
+        log('openOptions via chrome.runtime.openOptionsPage');
+        chrome.runtime.openOptionsPage();
+        return;
+      }
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.create) {
+        log('openOptions via chrome.tabs.create fallback');
+        chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+        return;
+      }
+      log('openOptions: no options API available');
+    } catch (e) { log('openOptions threw', e && e.message); }
   }
 
   function toggleEnabled() {
@@ -24,33 +35,39 @@
     try {
       var getter = storageApi.local.get;
       if (getter.length === 1) {
+        log('toggleEnabled: using storage.get(callback)');
         storageApi.local.get({ enabled: true }, function (res) {
           try {
             var cur = (res && typeof res.enabled !== 'undefined') ? !!res.enabled : true;
             var next = !cur;
             try {
               if (storageApi.local.set.length === 1) {
+                log('toggleEnabled: using storage.set(callback)');
                 storageApi.local.set({ enabled: next }, function () { log('toggled enabled ->', next); });
               } else {
+                log('toggleEnabled: using storage.set(promise)');
                 storageApi.local.set({ enabled: next }).then(function () { log('toggled enabled ->', next); });
               }
-            } catch (e) { try { storageApi.local.set({ enabled: next }); } catch (e) { log('storage set failed', e && e.message); } }
-          } catch (e) { }
+            } catch (e) { try { log('toggleEnabled: storage.set fallback'); storageApi.local.set({ enabled: next }); } catch (e) { log('storage set failed', e && e.message); } }
+          } catch (e) { log('toggleEnabled callback processing failed', e && e.message); }
         });
       } else {
+        log('toggleEnabled: using storage.get(promise)');
         storageApi.local.get({ enabled: true }).then(function (res) {
           try {
             var cur = (res && typeof res.enabled !== 'undefined') ? !!res.enabled : true;
             var next = !cur;
             try {
               if (storageApi.local.set.length === 1) {
+                log('toggleEnabled: using storage.set(callback)');
                 storageApi.local.set({ enabled: next }, function () { log('toggled enabled ->', next); });
               } else {
+                log('toggleEnabled: using storage.set(promise)');
                 storageApi.local.set({ enabled: next }).then(function () { log('toggled enabled ->', next); });
               }
-            } catch (e) { try { storageApi.local.set({ enabled: next }); } catch (e) { log('storage set failed', e && e.message); } }
-          } catch (e) { }
-        });
+            } catch (e) { try { log('toggleEnabled: storage.set fallback'); storageApi.local.set({ enabled: next }); } catch (e) { log('storage set failed', e && e.message); } }
+          } catch (e) { log('toggleEnabled promise processing failed', e && e.message); }
+        }).catch(function (e) { log('toggleEnabled: storage.get(promise) rejected', e && e.message); });
       }
     } catch (e) { }
   }
@@ -71,15 +88,22 @@
       var ba = (typeof browser !== 'undefined' && browser.browserAction) ? browser.browserAction : ((typeof chrome !== 'undefined' && chrome.browserAction) ? chrome.browserAction : null);
       if (ba && ba.setIcon) {
         try {
+          log('setToolbarIcon: attempting setIcon with path', p);
           // some implementations accept string path, others accept object
           ba.setIcon({ path: p });
+          return;
         } catch (e) {
+          log('setToolbarIcon: setIcon(path) threw, trying URL fallback', e && e.message);
           try {
             // fallback to full URL
             var url = runtimeApi && runtimeApi.getURL ? runtimeApi.getURL(p) : p;
+            log('setToolbarIcon: attempting setIcon with url', url);
             ba.setIcon({ path: url });
-          } catch (e) { }
+            return;
+          } catch (e) { log('setToolbarIcon: setIcon(url) failed', e && e.message); }
         }
+      } else {
+        log('setToolbarIcon: browserAction API not available');
       }
     } catch (e) { }
   }
@@ -90,11 +114,13 @@
     if (storageApiInit && storageApiInit.local && storageApiInit.local.get) {
       try {
         if (storageApiInit.local.get.length === 1) {
-          storageApiInit.local.get({ enabled: true }, function (r) { try { setToolbarIcon(!!(r && typeof r.enabled !== 'undefined' ? r.enabled : true)); } catch (e) { } });
+          log('init: storage.get(callback)');
+          storageApiInit.local.get({ enabled: true }, function (r) { try { var val = !!(r && typeof r.enabled !== 'undefined' ? r.enabled : true); log('init: got enabled via callback', val); setToolbarIcon(val); } catch (e) { log('init callback processing failed', e && e.message); } });
         } else {
-          storageApiInit.local.get({ enabled: true }).then(function (r) { try { setToolbarIcon(!!(r && typeof r.enabled !== 'undefined' ? r.enabled : true)); } catch (e) { } });
+          log('init: storage.get(promise)');
+          storageApiInit.local.get({ enabled: true }).then(function (r) { try { var val = !!(r && typeof r.enabled !== 'undefined' ? r.enabled : true); log('init: got enabled via promise', val); setToolbarIcon(val); } catch (e) { log('init promise processing failed', e && e.message); } }).catch(function (e) { log('init: storage.get(promise) rejected', e && e.message); });
         }
-      } catch (e) { }
+      } catch (e) { log('init: storage.get threw', e && e.message); }
     }
   } catch (e) { }
 
@@ -104,11 +130,12 @@
     if (storOnChanged && storOnChanged.addListener) {
       storOnChanged.addListener(function (changes, area) {
         try {
+          log('storage.onChanged', area, changes);
           if (area !== 'local') return;
           if (changes.enabled) {
-            try { setToolbarIcon(!!changes.enabled.newValue); } catch (e) { }
+            try { log('storage.onChanged: enabled changed ->', !!changes.enabled.newValue); setToolbarIcon(!!changes.enabled.newValue); } catch (e) { log('storage.onChanged processing failed', e && e.message); }
           }
-        } catch (e) { }
+        } catch (e) { log('storage.onChanged handler threw', e && e.message); }
       });
     }
   } catch (e) { }
@@ -121,7 +148,14 @@
         // id used to identify clicks
         var CM_ID = 'status-title-open-options';
         // remove existing (safe no-op in many implementations)
-        try { if (cmApi.remove) cmApi.remove(CM_ID); } catch (e) { }
+        try {
+          if (cmApi.remove) {
+            try {
+              var rem = cmApi.remove(CM_ID);
+              if (rem && typeof rem.then === 'function') rem.catch(function () { /* ignore */ });
+            } catch (e) { /* some implementations use callback-style remove; ignore sync errors */ }
+          }
+        } catch (e) { }
         cmApi.create({ id: CM_ID, title: 'オプションを開く', contexts: ['browser_action'] });
         if (cmApi.onClicked && cmApi.onClicked.addListener) {
           cmApi.onClicked.addListener(function (info, tab) {
@@ -220,8 +254,10 @@
                   if (storageApi && storageApi.local && storageApi.local.set) {
                     try {
                       if (storageApi.local.set.length === 1) {
+                        log('saveThemeColors: using storage.set(callback)');
                         storageApi.local.set(out, function () { log('saved theme colors', out); });
                       } else {
+                        log('saveThemeColors: using storage.set(promise)');
                         storageApi.local.set(out).then(function () { log('saved theme colors', out); });
                       }
                     } catch (e) { try { storageApi.local.set(out); } catch (e) { log('storage set failed', e && e.message); } }

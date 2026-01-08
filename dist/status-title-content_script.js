@@ -22,12 +22,12 @@
 
   var label = document.createElement('span');
   panel.appendChild(label);
-  var LOG_PREFIX = '[StatusTitle]';
+  var LOG_PREFIX = '[status-title]';
   function log() {
     try {
       var args = Array.prototype.slice.call(arguments);
       args.unshift(LOG_PREFIX);
-      if (console && console.log) console.log.apply(console, args);
+      if (console && console.debug) console.debug.apply(console, args);
     } catch (e) { }
   }
   document.body.appendChild(panel);
@@ -64,13 +64,15 @@
   setInterval(function () { if (document.title !== lastTitle) { lastTitle = document.title; setTitle(); } }, 500);
 
   var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
+  try { log('content_script: storage API ->', storage ? (typeof browser !== 'undefined' && browser.storage ? 'browser.storage' : 'chrome.storage') : 'none'); } catch (e) { }
   // fetch shared defaults and then read storage using those defaults
   var defaultsCache = null;
   function getDefaults(cb) {
     if (defaultsCache) { cb(defaultsCache); return; }
     try {
       var url = (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getURL) ? browser.runtime.getURL('defaults.json') : (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL ? chrome.runtime.getURL('defaults.json') : 'defaults.json');
-      fetch(url).then(function (r) { return r.json(); }).then(function (j) { defaultsCache = j || {}; cb(defaultsCache); }).catch(function () { defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); });
+      try { log('getDefaults: attempting fetch from', url); } catch (e) { }
+      fetch(url).then(function (r) { return r.json(); }).then(function (j) { defaultsCache = j || {}; try { log('getDefaults: fetched defaults.json'); } catch (e) { } cb(defaultsCache); }).catch(function () { try { log('getDefaults: fetch failed, using fallback defaults'); } catch (e) { } defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); });
     } catch (e) { defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); }
   }
 
@@ -78,6 +80,7 @@
     getDefaults(function (defaults) {
       try {
         if (storage.local.get.length === 1) {
+          try { log('content_script: storage.local.get -> callback style'); } catch (e) { }
           storage.local.get(defaults, function (res) {
             applyPosition((res && res.position) || defaults.position || DEFAULT);
             try {
@@ -92,6 +95,7 @@
             try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || defaults.fontSize || 20) + 'px'; } catch (e) { }
           });
         } else {
+          try { log('content_script: storage.local.get -> promise style'); } catch (e) { }
           storage.local.get(defaults).then(function (res) {
             applyPosition((res && res.position) || defaults.position || DEFAULT);
             try {
@@ -106,7 +110,7 @@
             try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || defaults.fontSize || 20) + 'px'; } catch (e) { }
           });
         }
-      } catch (e) { try { storage.local.get(defaults, function (res) { applyPosition((res && res.position) || defaults.position || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || defaults.fontSize || 20) + 'px'; } catch (e) { } }); } catch (e) { applyPosition(DEFAULT); } }
+      } catch (e) { try { log('content_script: storage.get fallback to callback due to error', e && e.message); storage.local.get(defaults, function (res) { applyPosition((res && res.position) || defaults.position || DEFAULT); try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { } try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || defaults.fontSize || 20) + 'px'; } catch (e) { } }); } catch (e) { log('content_script: storage.get fallback failed, applying default position', e && e.message); applyPosition(DEFAULT); } }
     });
   } else {
     applyPosition(DEFAULT);
@@ -114,6 +118,7 @@
 
   if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
     browser.storage.onChanged.addListener(function (changes, area) {
+      try { log('content_script: browser.storage.onChanged', changes, area); } catch (e) { }
       if (area !== 'local') return;
       try {
         if (changes.position) applyPosition(changes.position.newValue);
@@ -146,6 +151,7 @@
     });
   } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener(function (changes, area) {
+      try { log('content_script: chrome.storage.onChanged', changes, area); } catch (e) { }
       if (area !== 'local') return;
       try {
         if (changes.position) applyPosition(changes.position.newValue);

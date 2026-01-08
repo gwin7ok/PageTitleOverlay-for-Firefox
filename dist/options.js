@@ -1,5 +1,6 @@
 (function () {
   var DEFAULT = 'left-bottom';
+  function log() { try { var a = Array.prototype.slice.call(arguments); a.unshift('[status-title]'); if (console && console.debug) console.debug.apply(console, a); } catch (e) { } }
   var form = document.getElementById('posForm');
   var status = document.getElementById('status');
   var enabledOn = document.getElementById('enabled_on');
@@ -25,17 +26,21 @@
 
   function load() {
     var storage = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
+    log('load: storage API ->', !!storage ? (typeof browser !== 'undefined' && browser.storage ? 'browser.storage' : 'chrome.storage') : 'none');
     // load shared defaults.json first, then call storage.get with those defaults
     getDefaults(function (defaults) {
       if (storage && storage.local) {
         try {
           if (storage.local.get.length === 1) {
+            log('load: storage.local.get -> callback style');
             storage.local.get(defaults, function (res) { populateFromStorage(res, defaults); });
           } else {
+            log('load: storage.local.get -> promise style');
             storage.local.get(defaults).then(function (res) { populateFromStorage(res, defaults); });
           }
         } catch (e) {
-          try { storage.local.get(defaults, function (res) { populateFromStorage(res, defaults); }); } catch (e) { populateFromStorage(defaults, defaults); }
+          log('load: storage.local.get threw, attempting callback fallback');
+          try { storage.local.get(defaults, function (res) { populateFromStorage(res, defaults); }); } catch (e) { log('load: storage.get fallback failed, using defaults'); populateFromStorage(defaults, defaults); }
         }
       } else {
         populateFromStorage(defaults, defaults);
@@ -66,8 +71,9 @@
     if (defaultsCache) { cb(defaultsCache); return; }
     try {
       var url = (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getURL) ? browser.runtime.getURL('defaults.json') : (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL ? chrome.runtime.getURL('defaults.json') : 'defaults.json');
+      log('getDefaults: attempting fetch from', url);
       fetch(url).then(function (r) { return r.json(); }).then(function (j) { defaultsCache = j || {}; cb(defaultsCache); }).catch(function () { defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); });
-    } catch (e) { defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); }
+    } catch (e) { log('getDefaults: fetch failed, using fallback defaults', e && e.message); defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); }
   }
 
   // helper: robust storage.set that supports Promise and callback styles
@@ -80,13 +86,15 @@
     try {
       var ret = storage.local.set(obj);
       if (ret && typeof ret.then === 'function') {
+        log('storageSet: using promise-style storage.local.set');
         ret.then(function () { if (cb) cb(null); }).catch(function (err) { if (cb) cb(err || new Error('set failed')); });
         return;
       }
     } catch (e) { }
     try {
+      log('storageSet: using callback-style storage.local.set');
       storage.local.set(obj, function () { if (cb) cb(null); });
-    } catch (e) { if (cb) cb(e || new Error('set failed')); }
+    } catch (e) { log('storageSet: callback-style set failed', e && e.message); if (cb) cb(e || new Error('set failed')); }
   }
 
   // track if user has interacted with font input to avoid overwriting with async load
@@ -159,6 +167,7 @@
               statusFetch.textContent = '取得中…';
               var runtimeApi = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : (typeof chrome !== 'undefined' ? chrome.runtime : null);
               if (runtimeApi && runtimeApi.sendMessage) {
+                log('fetchTheme: using runtime.sendMessage');
                 // Request theme colors from background but do NOT save them to storage here.
                 // Background's 'getTheme' returns an object with { background, color } if available.
                 var p = runtimeApi.sendMessage({ action: 'getTheme' });
@@ -211,6 +220,7 @@
       var storageApi = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
       if (storageApi && storageApi.onChanged) {
         storageApi.onChanged.addListener(function (changes, area) {
+          log('options: storage.onChanged', changes, area);
           if (area !== 'local') return;
           if (changes.bgColor && bgInput) bgInput.value = changes.bgColor.newValue || '#000000';
           if (changes.textColor && textInput) textInput.value = changes.textColor.newValue || '#ffffff';
