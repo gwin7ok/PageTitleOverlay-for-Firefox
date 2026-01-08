@@ -42,6 +42,31 @@
   // Respond to content scripts asking for theme colors
   function handleMessage(request, sender, sendResponse) {
     log('handleMessage', request, sender);
+    function colorFromValue(v) {
+      try {
+        if (!v && v !== 0) return null;
+        if (Array.isArray(v)) {
+          if (v.length === 3) return 'rgb(' + v.join(',') + ')';
+          if (v.length === 4) return 'rgba(' + v[0] + ',' + v[1] + ',' + v[2] + ',' + v[3] + ')';
+        }
+        if (typeof v === 'string') return v;
+      } catch (e) { }
+      return null;
+    }
+
+    function pickFirstColor(colors, keys) {
+      try {
+        if (!colors) return null;
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          if (typeof colors[key] !== 'undefined' && colors[key] !== null) {
+            var c = colorFromValue(colors[key]);
+            if (c) return c;
+          }
+        }
+      } catch (e) { }
+      return null;
+    }
     // picker state
     // pickerActive: whether user started a picker session
     // pickerField: which field ('bgColor' or 'textColor') is being picked
@@ -60,8 +85,8 @@
               log('theme.getCurrent result', theme);
               var out = {};
               if (theme && theme.colors) {
-                out.background = theme.colors.accentcolor || theme.colors.toolbar || null;
-                out.color = theme.colors.textcolor || theme.colors.toolbar_text || null;
+                out.background = pickFirstColor(theme.colors, ['accentcolor', 'toolbar', 'frame', 'tab_background_text']);
+                out.color = pickFirstColor(theme.colors, ['toolbar_text', 'tab_background_text', 'bookmark_text', 'textcolor', 'toolbar_field_text']);
               }
               sendResponse(out);
             }).catch(function () { sendResponse({}); });
@@ -85,9 +110,10 @@
                 try {
                   var out = {};
                   if (theme && theme.colors) {
-                    var bg = theme.colors.accentcolor || theme.colors.toolbar || theme.colors.frame || null;
-                    var col = theme.colors.textcolor || theme.colors.toolbar_text || null;
-                    if (bg) out.bgColor = bg; if (col) out.textColor = col; out.bgAlpha = 60; out.textAlpha = 0;
+                    out.bgColor = pickFirstColor(theme.colors, ['accentcolor', 'toolbar', 'frame', 'tab_background_text']);
+                    out.textColor = pickFirstColor(theme.colors, ['toolbar_text', 'tab_background_text', 'bookmark_text', 'textcolor', 'toolbar_field_text']);
+                    out.bgAlpha = 60;
+                    out.textAlpha = 0;
                   }
                   var storageApi = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' && chrome.storage ? chrome.storage : null);
                   if (storageApi && storageApi.local && storageApi.local.set) {
