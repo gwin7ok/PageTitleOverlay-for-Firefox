@@ -114,9 +114,20 @@
               statusFetch.textContent = '取得中…';
               var runtimeApi = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : (typeof chrome !== 'undefined' ? chrome.runtime : null);
               if (runtimeApi && runtimeApi.sendMessage) {
-                var p = runtimeApi.sendMessage({ action: 'saveThemeColors' });
+                // Request theme colors from background but do NOT save them to storage here.
+                // Background's 'getTheme' returns an object with { background, color } if available.
+                var p = runtimeApi.sendMessage({ action: 'getTheme' });
                 if (p && typeof p.then === 'function') {
-                  p.then(function (res) { statusFetch.textContent = res && res.ok ? '取得しました' : '取得できませんでした'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); }).catch(function () { statusFetch.textContent = '取得に失敗'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); });
+                  p.then(function (res) {
+                    try {
+                      if (res) {
+                        if (res.background && bgInput) bgInput.value = res.background || bgInput.value;
+                        if (res.color && textInput) textInput.value = res.color || textInput.value;
+                      }
+                      statusFetch.textContent = '取得しました（未保存）';
+                      setTimeout(function () { statusFetch.textContent = ''; }, 1400);
+                    } catch (e) { statusFetch.textContent = '取得に失敗'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); }
+                  }).catch(function () { statusFetch.textContent = '取得に失敗'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); });
                 }
               }
             } catch (e) { statusFetch.textContent = '取得に失敗'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); }
