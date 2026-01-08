@@ -26,7 +26,7 @@
 
   var DEFAULT = 'left-bottom';
   var CURRENT_POS = DEFAULT;
-  var MARGIN_PX = 10;
+  var MARGIN_PX = 0;
   function applyPosition(pos) {
     // use 'auto' to explicitly clear opposing sides so computed width/heights behave predictably
     panel.style.top = 'auto';
