@@ -18,10 +18,47 @@
     }
   }
 
+  function toggleEnabled() {
+    var storageApi = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' && chrome.storage ? chrome.storage : null);
+    if (!storageApi || !storageApi.local) return;
+    try {
+      var getter = storageApi.local.get;
+      if (getter.length === 1) {
+        storageApi.local.get({ enabled: true }, function (res) {
+          try {
+            var cur = (res && typeof res.enabled !== 'undefined') ? !!res.enabled : true;
+            var next = !cur;
+            try {
+              if (storageApi.local.set.length === 1) {
+                storageApi.local.set({ enabled: next }, function () { log('toggled enabled ->', next); });
+              } else {
+                storageApi.local.set({ enabled: next }).then(function () { log('toggled enabled ->', next); });
+              }
+            } catch (e) { try { storageApi.local.set({ enabled: next }); } catch (e) { log('storage set failed', e && e.message); } }
+          } catch (e) { }
+        });
+      } else {
+        storageApi.local.get({ enabled: true }).then(function (res) {
+          try {
+            var cur = (res && typeof res.enabled !== 'undefined') ? !!res.enabled : true;
+            var next = !cur;
+            try {
+              if (storageApi.local.set.length === 1) {
+                storageApi.local.set({ enabled: next }, function () { log('toggled enabled ->', next); });
+              } else {
+                storageApi.local.set({ enabled: next }).then(function () { log('toggled enabled ->', next); });
+              }
+            } catch (e) { try { storageApi.local.set({ enabled: next }); } catch (e) { log('storage set failed', e && e.message); } }
+          } catch (e) { }
+        });
+      }
+    } catch (e) { }
+  }
+
   if (typeof browser !== 'undefined' && browser.browserAction) {
-    browser.browserAction.onClicked.addListener(openOptions);
+    browser.browserAction.onClicked.addListener(toggleEnabled);
   } else if (typeof chrome !== 'undefined' && chrome.browserAction) {
-    chrome.browserAction.onClicked.addListener(openOptions);
+    chrome.browserAction.onClicked.addListener(toggleEnabled);
   }
 
   // Create a context menu item when right-clicking the toolbar icon
