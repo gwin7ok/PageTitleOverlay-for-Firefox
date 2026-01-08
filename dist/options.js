@@ -153,11 +153,7 @@
           if (changes.textColor && textInput) textInput.value = changes.textColor.newValue || '#ffffff';
           if (changes.bgAlpha && bgAlphaInput) { bgAlphaInput.value = changes.bgAlpha.newValue; if (bgAlphaVal) bgAlphaVal.textContent = changes.bgAlpha.newValue; }
           if (changes.textAlpha && textAlphaInput) { textAlphaInput.value = changes.textAlpha.newValue; if (textAlphaVal) textAlphaVal.textContent = changes.textAlpha.newValue; }
-          // if picker stored value, show brief confirmation
-          if ((changes.bgColor || changes.textColor) && statusColors) {
-            statusColors.textContent = 'スポイトで選択されました';
-            setTimeout(function () { statusColors.textContent = ''; }, 1400);
-          }
+          // no UI confirmation needed when storage changes from picker/save
         });
       }
     } catch (e) { }
