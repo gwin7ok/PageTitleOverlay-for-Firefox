@@ -8,12 +8,14 @@
   panel.style.position = 'fixed';
   panel.style.zIndex = '2147483647';
   panel.style.pointerEvents = 'none';
+  panel.style.display = 'inline-block';
+  panel.style.boxSizing = 'border-box';
   panel.style.padding = '2px 6px';
   panel.style.background = 'rgba(0,0,0,0.6)';
   panel.style.color = '#fff';
   panel.style.fontSize = '12px';
   panel.style.borderRadius = '3px';
-  panel.style.maxWidth = '80%';
+  panel.style.width = 'auto';
   panel.style.overflow = 'hidden';
   panel.style.whiteSpace = 'nowrap';
   panel.style.textOverflow = 'ellipsis';
@@ -24,10 +26,11 @@
 
   var DEFAULT = 'left-bottom';
   function applyPosition(pos) {
-    panel.style.top = '';
-    panel.style.bottom = '';
-    panel.style.left = '';
-    panel.style.right = '';
+    // use 'auto' to explicitly clear opposing sides so computed width/heights behave predictably
+    panel.style.top = 'auto';
+    panel.style.bottom = 'auto';
+    panel.style.left = 'auto';
+    panel.style.right = 'auto';
     var margin = '10px';
     if (pos === 'left-top') { panel.style.top = margin; panel.style.left = margin; }
     else if (pos === 'right-top') { panel.style.top = margin; panel.style.right = margin; }
