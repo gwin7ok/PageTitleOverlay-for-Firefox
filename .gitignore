@@ -1,0 +1,21 @@
+# Node / tooling
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+extension.xpi
+xpi_contents/
+*.zip
+#.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Misc
+*.log
