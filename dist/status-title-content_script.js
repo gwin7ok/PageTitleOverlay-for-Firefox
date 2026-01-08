@@ -22,6 +22,14 @@
 
   var label = document.createElement('span');
   panel.appendChild(label);
+  var LOG_PREFIX = '[StatusTitle]';
+  function log() {
+    try {
+      var args = Array.prototype.slice.call(arguments);
+      args.unshift(LOG_PREFIX);
+      if (console && console.log) console.log.apply(console, args);
+    } catch (e) {}
+  }
   document.body.appendChild(panel);
 
   var DEFAULT = 'left-bottom';
@@ -87,4 +95,51 @@
       } catch (e) { panel.style.maxWidth = ''; }
     }
   });
+
+  // Request theme colors from background and apply if available
+  function normalizeColor(c) {
+    try {
+      if (!c && c !== 0) return null;
+      if (Array.isArray(c)) {
+        if (c.length === 3) return 'rgb(' + c.join(',') + ')';
+        if (c.length === 4) return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + c[3] + ')';
+      }
+      if (typeof c === 'string') return c;
+    } catch (e) {}
+    return null;
+  }
+
+  try {
+    var runtimeApi = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : (typeof chrome !== 'undefined' ? chrome.runtime : null);
+    if (runtimeApi && runtimeApi.sendMessage) {
+      try {
+        log('requesting theme from background');
+        var p = runtimeApi.sendMessage({ action: 'getTheme' });
+        if (p && typeof p.then === 'function') {
+          p.then(function (res) {
+            log('theme response', res);
+            if (res) {
+              var bg = normalizeColor(res.background);
+              var col = normalizeColor(res.color);
+              if (bg) panel.style.background = bg;
+              if (col) panel.style.color = col;
+            }
+          }).catch(function () {});
+        }
+      } catch (e) {
+        try {
+          log('requesting theme (callback style)');
+          runtimeApi.sendMessage({ action: 'getTheme' }, function (res) {
+            log('theme response (cb)', res);
+            if (res) {
+              var bg = normalizeColor(res.background);
+              var col = normalizeColor(res.color);
+              if (bg) panel.style.background = bg;
+              if (col) panel.style.color = col;
+            }
+          });
+        } catch (e) {}
+      }
+    }
+  } catch (e) {}
 })();

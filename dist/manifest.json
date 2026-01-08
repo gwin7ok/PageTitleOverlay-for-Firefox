@@ -14,7 +14,7 @@
   },
   "background": {
     "scripts": [
-      "background.js"
+      "status-title-background.js"
     ],
     "persistent": true
   },
@@ -34,7 +34,7 @@
         "<all_urls>"
       ],
       "js": [
-        "content_script.js"
+        "status-title-content_script.js"
       ],
       "css": [
         "style.css"
