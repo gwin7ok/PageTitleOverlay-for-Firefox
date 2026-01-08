@@ -128,10 +128,14 @@
       var r = parseInt(h.substring(0, 2), 16);
       var g = parseInt(h.substring(2, 4), 16);
       var b = parseInt(h.substring(4, 6), 16);
+      // alphaPercent is stored as "透明度(%)": 0 = fully opaque, 100 = fully transparent
       var a = 1;
       if (typeof alphaPercent !== 'undefined' && alphaPercent !== null) {
         var ap = parseFloat(alphaPercent);
-        if (!isNaN(ap)) a = Math.max(0, Math.min(100, ap)) / 100;
+        if (!isNaN(ap)) {
+          var tp = Math.max(0, Math.min(100, ap));
+          a = 1 - (tp / 100); // convert transparency% -> opacity
+        }
       }
       return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
     } catch (e) { return null; }

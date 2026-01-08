@@ -100,6 +100,61 @@
       if (alphaInput && alphaVal) {
         alphaInput.addEventListener('input', function () { alphaVal.textContent = alphaInput.value; });
       }
+      // fetch theme button
+      try {
+        var fetchBtn = document.getElementById('fetchTheme');
+        var statusFetch = document.getElementById('statusFetch');
+        if (fetchBtn) {
+          fetchBtn.addEventListener('click', function () {
+            try {
+              statusFetch.textContent = '取得中…';
+              var runtimeApi = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : (typeof chrome !== 'undefined' ? chrome.runtime : null);
+              if (runtimeApi && runtimeApi.sendMessage) {
+                var p = runtimeApi.sendMessage({ action: 'saveThemeColors' });
+                if (p && typeof p.then === 'function') {
+                  p.then(function (res) { statusFetch.textContent = res && res.ok ? '取得しました' : '取得できませんでした'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); }).catch(function () { statusFetch.textContent = '取得に失敗'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); });
+                }
+              }
+            } catch (e) { statusFetch.textContent = '取得に失敗'; setTimeout(function () { statusFetch.textContent = ''; }, 1400); }
+          });
+        }
+      } catch (e) { }
     }
+    // pick buttons (スポイト) - request picker via background
+    try {
+      var picks = document.querySelectorAll('.pick');
+      for (var pi = 0; pi < picks.length; pi++) {
+        (function (btn) {
+          btn.addEventListener('click', function () {
+            var field = btn.getAttribute('data-field');
+            if (!field) return;
+            statusColors.textContent = 'スポイト中…ページをクリックしてください（Escでキャンセル）';
+            try {
+              var runtimeApi = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : (typeof chrome !== 'undefined' ? chrome.runtime : null);
+              if (runtimeApi && runtimeApi.sendMessage) {
+                runtimeApi.sendMessage({ action: 'startPicker', field: field });
+              }
+            } catch (e) { statusColors.textContent = 'スポイトを開始できませんでした'; setTimeout(function () { statusColors.textContent = ''; }, 1500); }
+          });
+        })(picks[pi]);
+      }
+    } catch (e) { }
+    // reflect storage changes in UI (when background stores picked colors)
+    try {
+      var storageApi = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' ? chrome.storage : null);
+      if (storageApi && storageApi.onChanged) {
+        storageApi.onChanged.addListener(function (changes, area) {
+          if (area !== 'local') return;
+          if (changes.bgColor && bgInput) bgInput.value = changes.bgColor.newValue || '#000000';
+          if (changes.textColor && textInput) textInput.value = changes.textColor.newValue || '#ffffff';
+          if (changes.alpha && alphaInput) { alphaInput.value = changes.alpha.newValue; if (alphaVal) alphaVal.textContent = changes.alpha.newValue; }
+          // if picker stored value, show brief confirmation
+          if ((changes.bgColor || changes.textColor) && statusColors) {
+            statusColors.textContent = 'スポイトで選択されました';
+            setTimeout(function () { statusColors.textContent = ''; }, 1400);
+          }
+        });
+      }
+    } catch (e) { }
   }
 })();
