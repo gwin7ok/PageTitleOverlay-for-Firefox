@@ -35,6 +35,14 @@
   var DEFAULT = 'left-bottom';
   var CURRENT_POS = DEFAULT;
   var MARGIN_PX = 0;
+  var overlayRect = null;
+  var overlayHiddenByMouse = false;
+
+  function updateOverlayRect() {
+    try {
+      overlayRect = panel.getBoundingClientRect();
+    } catch (e) { overlayRect = null; }
+  }
 
   function applyPosition(pos) {
     panel.style.top = 'auto'; panel.style.bottom = 'auto'; panel.style.left = 'auto'; panel.style.right = 'auto';
@@ -47,9 +55,10 @@
     if (pos.indexOf('right') !== -1) {
       try { var avail = window.innerWidth - (MARGIN_PX * 2); if (avail > 0) panel.style.maxWidth = avail + 'px'; } catch (e) { panel.style.maxWidth = ''; }
     }
+    try { updateOverlayRect(); } catch (e) { }
   }
 
-  function setTitle() { label.textContent = document.title || ''; }
+  function setTitle() { label.textContent = document.title || ''; updateOverlayRect(); }
   setTitle();
   var lastTitle = document.title;
   setInterval(function () { if (document.title !== lastTitle) { lastTitle = document.title; setTitle(); } }, 500);
@@ -71,13 +80,29 @@
         if (storage.local.get.length === 1) {
           storage.local.get(defaults, function (res) {
             applyPosition((res && res.position) || defaults.position || DEFAULT);
-            try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { }
+            try {
+              if (typeof res.enabled !== 'undefined' && !res.enabled) {
+                panel.style.display = 'none';
+              } else {
+                panel.style.display = 'inline-block';
+                try { panel.style.visibility = 'visible'; } catch (e) { }
+                try { updateOverlayRect(); } catch (e) { }
+              }
+            } catch (e) { }
             try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || defaults.fontSize || 20) + 'px'; } catch (e) { }
           });
         } else {
           storage.local.get(defaults).then(function (res) {
             applyPosition((res && res.position) || defaults.position || DEFAULT);
-            try { if (typeof res.enabled !== 'undefined' && !res.enabled) panel.style.display = 'none'; else panel.style.display = 'inline-block'; } catch (e) { }
+            try {
+              if (typeof res.enabled !== 'undefined' && !res.enabled) {
+                panel.style.display = 'none';
+              } else {
+                panel.style.display = 'inline-block';
+                try { panel.style.visibility = 'visible'; } catch (e) { }
+                try { updateOverlayRect(); } catch (e) { }
+              }
+            } catch (e) { }
             try { if (res && typeof res.fontSize !== 'undefined') panel.style.fontSize = (parseInt(res.fontSize, 10) || defaults.fontSize || 20) + 'px'; } catch (e) { }
           });
         }
@@ -93,7 +118,15 @@
       try {
         if (changes.position) applyPosition(changes.position.newValue);
         if (changes.enabled) {
-          try { if (changes.enabled.newValue) panel.style.display = 'inline-block'; else panel.style.display = 'none'; } catch (e) { }
+          try {
+            if (changes.enabled.newValue) {
+              panel.style.display = 'inline-block';
+              try { panel.style.visibility = 'visible'; } catch (e) { }
+              try { updateOverlayRect(); } catch (e) { }
+            } else {
+              panel.style.display = 'none';
+            }
+          } catch (e) { }
         }
         if (changes.fontSize) { try { panel.style.fontSize = (parseInt(changes.fontSize.newValue, 10) || 20) + 'px'; } catch (e) { } }
         if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) {
@@ -117,7 +150,15 @@
       try {
         if (changes.position) applyPosition(changes.position.newValue);
         if (changes.enabled) {
-          try { if (changes.enabled.newValue) panel.style.display = 'inline-block'; else panel.style.display = 'none'; } catch (e) { }
+          try {
+            if (changes.enabled.newValue) {
+              panel.style.display = 'inline-block';
+              try { panel.style.visibility = 'visible'; } catch (e) { }
+              try { updateOverlayRect(); } catch (e) { }
+            } else {
+              panel.style.display = 'none';
+            }
+          } catch (e) { }
         }
         if (changes.bgColor || changes.textColor || changes.bgAlpha || changes.textAlpha) {
           try {
@@ -136,6 +177,31 @@
   }
 
   window.addEventListener('resize', function () { if (CURRENT_POS && CURRENT_POS.indexOf('right') !== -1) { try { var avail = window.innerWidth - (MARGIN_PX * 2); if (avail > 0) panel.style.maxWidth = avail + 'px'; } catch (e) { panel.style.maxWidth = ''; } } });
+
+  // Hide overlay while mouse is within its area so underlying content can be interacted with
+  window.addEventListener('mousemove', function (ev) {
+    try {
+      if (!overlayRect) updateOverlayRect();
+      if (!overlayRect) return;
+      // if panel is not displayed, nothing to do
+      if (panel.style.display === 'none') return;
+      var x = ev.clientX, y = ev.clientY;
+      var inside = x >= overlayRect.left && x <= overlayRect.right && y >= overlayRect.top && y <= overlayRect.bottom;
+      if (inside) {
+        if (!overlayHiddenByMouse) {
+          try { panel.style.visibility = 'hidden'; } catch (e) { }
+          overlayHiddenByMouse = true;
+        }
+      } else {
+        if (overlayHiddenByMouse) {
+          try { panel.style.visibility = 'visible'; } catch (e) { }
+          overlayHiddenByMouse = false;
+          // update rect as the panel may have been restored
+          updateOverlayRect();
+        }
+      }
+    } catch (e) { }
+  });
 
   function normalizeColor(c) {
     try {
