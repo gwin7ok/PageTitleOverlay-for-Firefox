@@ -61,6 +61,58 @@
     chrome.browserAction.onClicked.addListener(toggleEnabled);
   }
 
+  // helper to set toolbar icon based on enabled state
+  function setToolbarIcon(enabled) {
+    try {
+      var runtimeApi = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : ((typeof chrome !== 'undefined' && chrome.runtime) ? chrome.runtime : null);
+      var pathEnabled = 'icon48.png';
+      var pathDisabled = 'icondisable48.png';
+      var p = enabled ? pathEnabled : pathDisabled;
+      var ba = (typeof browser !== 'undefined' && browser.browserAction) ? browser.browserAction : ((typeof chrome !== 'undefined' && chrome.browserAction) ? chrome.browserAction : null);
+      if (ba && ba.setIcon) {
+        try {
+          // some implementations accept string path, others accept object
+          ba.setIcon({ path: p });
+        } catch (e) {
+          try {
+            // fallback to full URL
+            var url = runtimeApi && runtimeApi.getURL ? runtimeApi.getURL(p) : p;
+            ba.setIcon({ path: url });
+          } catch (e) { }
+        }
+      }
+    } catch (e) { }
+  }
+
+  // initialize toolbar icon from stored enabled state
+  try {
+    var storageApiInit = (typeof browser !== 'undefined' && browser.storage) ? browser.storage : (typeof chrome !== 'undefined' && chrome.storage ? chrome.storage : null);
+    if (storageApiInit && storageApiInit.local && storageApiInit.local.get) {
+      try {
+        if (storageApiInit.local.get.length === 1) {
+          storageApiInit.local.get({ enabled: true }, function (r) { try { setToolbarIcon(!!(r && typeof r.enabled !== 'undefined' ? r.enabled : true)); } catch (e) { } });
+        } else {
+          storageApiInit.local.get({ enabled: true }).then(function (r) { try { setToolbarIcon(!!(r && typeof r.enabled !== 'undefined' ? r.enabled : true)); } catch (e) { } });
+        }
+      } catch (e) { }
+    }
+  } catch (e) { }
+
+  // listen for storage changes to update icon immediately
+  try {
+    var storOnChanged = (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) ? browser.storage.onChanged : ((typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) ? chrome.storage.onChanged : null);
+    if (storOnChanged && storOnChanged.addListener) {
+      storOnChanged.addListener(function (changes, area) {
+        try {
+          if (area !== 'local') return;
+          if (changes.enabled) {
+            try { setToolbarIcon(!!changes.enabled.newValue); } catch (e) { }
+          }
+        } catch (e) { }
+      });
+    }
+  } catch (e) { }
+
   // Create a context menu item when right-clicking the toolbar icon
   try {
     var cmApi = (typeof browser !== 'undefined' && browser.contextMenus) ? browser.contextMenus : ((typeof chrome !== 'undefined' && chrome.contextMenus) ? chrome.contextMenus : null);
