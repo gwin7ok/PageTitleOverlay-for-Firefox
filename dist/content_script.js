@@ -25,17 +25,28 @@
   document.body.appendChild(panel);
 
   var DEFAULT = 'left-bottom';
+  var CURRENT_POS = DEFAULT;
+  var MARGIN_PX = 10;
   function applyPosition(pos) {
     // use 'auto' to explicitly clear opposing sides so computed width/heights behave predictably
     panel.style.top = 'auto';
     panel.style.bottom = 'auto';
     panel.style.left = 'auto';
     panel.style.right = 'auto';
-    var margin = '10px';
-    if (pos === 'left-top') { panel.style.top = margin; panel.style.left = margin; }
+    var margin = MARGIN_PX + 'px';
+    CURRENT_POS = pos;
+    if (pos === 'left-top') { panel.style.top = margin; panel.style.left = margin; panel.style.maxWidth = ''; }
     else if (pos === 'right-top') { panel.style.top = margin; panel.style.right = margin; }
     else if (pos === 'right-bottom') { panel.style.bottom = margin; panel.style.right = margin; }
-    else { panel.style.bottom = margin; panel.style.left = margin; }
+    else { panel.style.bottom = margin; panel.style.left = margin; panel.style.maxWidth = ''; }
+
+    // For right-anchored positions, ensure panel does not extend beyond left edge
+    if (pos.indexOf('right') !== -1) {
+      try {
+        var avail = window.innerWidth - (MARGIN_PX * 2);
+        if (avail > 0) panel.style.maxWidth = avail + 'px';
+      } catch (e) { panel.style.maxWidth = ''; }
+    }
   }
 
   function setTitle() { label.textContent = document.title || ''; }
@@ -66,4 +77,14 @@
   } else {
     applyPosition(DEFAULT);
   }
+
+  // Recompute maxWidth on resize when anchored to right
+  window.addEventListener('resize', function () {
+    if (CURRENT_POS && CURRENT_POS.indexOf('right') !== -1) {
+      try {
+        var avail = window.innerWidth - (MARGIN_PX * 2);
+        if (avail > 0) panel.style.maxWidth = avail + 'px';
+      } catch (e) { panel.style.maxWidth = ''; }
+    }
+  });
 })();
