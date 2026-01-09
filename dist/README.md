@@ -17,7 +17,7 @@ Files
 - `manifest.json` - extension manifest
 - `page-title-overlay-content_script.js` - core overlay and logic
 - `page-title-overlay-background.js` - background script (toolbar, context menu, theme handling)
-- `options.html` / `options.js` / `options.css` - options UI
-- `style.css` - styles for the overlay
+- `page-title-overlay-options.html` / `page-title-overlay-options.js` / `page-title-overlay-options.css` - options UI
+- `page-title-overlay-style.css` - styles for the overlay
 
 If you want additional features (allowlist, delay on hover, or different positioning presets), tell me and I can implement them.

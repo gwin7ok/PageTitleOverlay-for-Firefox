@@ -20,7 +20,7 @@
     "persistent": true
   },
   "options_ui": {
-    "page": "options.html",
+    "page": "page-title-overlay-options.html",
     "open_in_tab": true
   },
   "browser_specific_settings": {
@@ -38,7 +38,7 @@
         "page-title-overlay-content_script.js"
       ],
       "css": [
-        "style.css"
+        "page-title-overlay-style.css"
       ],
       "run_at": "document_idle"
     }

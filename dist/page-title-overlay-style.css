@@ -1,0 +1,30 @@
+#page-title-overlay {
+    position: fixed;
+    left: 8px;
+    bottom: 30px;
+    background: rgba(0, 0, 0, 0.66);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    font-size: 13px;
+    line-height: 1;
+    z-index: 2147483647;
+    pointer-events: none;
+    transition: opacity 160ms linear, visibility 160ms linear;
+    opacity: 1;
+}
+
+#page-title-overlay[force-hide] {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#page-title-overlay>#page-title-overlay-label {
+    pointer-events: none;
+    display: inline-block;
+    max-width: 80vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

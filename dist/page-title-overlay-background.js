@@ -22,7 +22,7 @@
             }
             if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.create) {
                 log('openOptions via chrome.tabs.create fallback');
-                chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+                chrome.tabs.create({ url: chrome.runtime.getURL('page-title-overlay-options.html') });
                 return;
             }
             log('openOptions: no options API available');

@@ -71,7 +71,7 @@
     function getDefaults(cb) {
         if (defaultsCache) { cb(defaultsCache); return; }
         try {
-            var url = (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getURL) ? browser.runtime.getURL('defaults.json') : (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL ? chrome.runtime.getURL('defaults.json') : 'defaults.json');
+            var url = (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getURL) ? browser.runtime.getURL('page-title-overlay-defaults.json') : (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL ? chrome.runtime.getURL('page-title-overlay-defaults.json') : 'page-title-overlay-defaults.json');
             try { log('getDefaults: attempting fetch from', url); } catch (e) { }
             fetch(url).then(function (r) { return r.json(); }).then(function (j) { defaultsCache = j || {}; try { log('getDefaults: fetched defaults.json'); } catch (e) { } cb(defaultsCache); }).catch(function () { try { log('getDefaults: fetch failed, using fallback defaults'); } catch (e) { } defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); });
         } catch (e) { defaultsCache = { position: DEFAULT, bgColor: '#c0d7e5', textColor: '#000000', bgAlpha: 0, textAlpha: 0, enabled: true, fontSize: 20 }; cb(defaultsCache); }

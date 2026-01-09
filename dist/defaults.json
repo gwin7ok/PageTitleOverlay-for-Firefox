@@ -1,9 +1,3 @@
 {
-    "bgAlpha": 0,
-    "bgColor": "#c0d7e5",
-    "enabled": true,
-    "fontSize": 20,
-    "position": "left-bottom",
-    "textAlpha": 0,
-    "textColor": "#000000"
+    "note": "defaults.json is deprecated; use page-title-overlay-defaults.json"
 }
