@@ -1,16 +1,19 @@
 Param(
-    [Parameter(Mandatory=$true)][string]$SourceDir,
-    [Parameter(Mandatory=$true)][string]$OutPath
+    [Parameter(Mandatory = $true)][string]$SourceDir,
+    [Parameter(Mandatory = $true)][string]$OutPath
 )
 
 Set-Location -LiteralPath $SourceDir
-$exclude = @('build_xpi.bat','build_xpi.ps1','.git','.gitignore')
+$exclude = @('build_xpi.bat', 'build_xpi.ps1', '.git', '.gitignore')
+# Exclude legacy files that were renamed but may remain in dist
+$exclude += @('status-title-background.js', 'status-title-content_script.js', 'status-title-picker.js')
 $files = Get-ChildItem -Recurse -File -Force | Where-Object { -not ($exclude -contains $_.Name) } | Select-Object -ExpandProperty FullName
 if ($files) {
     $outExt = [IO.Path]::GetExtension($OutPath)
     if ($outExt -ieq '.zip') {
         $zipPath = $OutPath
-    } else {
+    }
+    else {
         $zipPath = [IO.Path]::ChangeExtension($OutPath, '.zip')
     }
     # Remove previous output files to avoid embedding them
@@ -23,7 +26,8 @@ if ($files) {
         # remove temporary extracted folder if present to avoid including stale files
         $tempDir = Join-Path -Path $SourceDir -ChildPath 'xpi_contents'
         if (Test-Path -LiteralPath $tempDir) { Remove-Item -LiteralPath $tempDir -Recurse -Force }
-    } catch {
+    }
+    catch {
         Write-Host "Warning: could not remove previous artifacts: $($_.Exception.Message)"
     }
     try {
@@ -43,7 +47,8 @@ if ($files) {
         }
         if ($relPaths.Count -eq 0) { Write-Error "No files to compress."; exit 1 }
         Compress-Archive -Path $relPaths -DestinationPath $zipPath -Force
-    } catch {
+    }
+    catch {
         Write-Error "Compress-Archive failed: $($_.Exception.Message)"
         exit 1
     }
@@ -51,7 +56,8 @@ if ($files) {
     if ($zipPath -ne $OutPath) {
         try {
             Move-Item -LiteralPath $zipPath -Destination $OutPath -Force
-        } catch {
+        }
+        catch {
             Write-Error ("Failed to rename {0} to {1}: {2}" -f $zipPath, $OutPath, $_.Exception.Message)
             exit 1
         }
@@ -59,7 +65,8 @@ if ($files) {
 
     Write-Host "Created $OutPath"
 
-} else {
+}
+else {
     Write-Error "No files to compress."
     exit 1
 }
