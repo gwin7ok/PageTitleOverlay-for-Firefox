@@ -22,7 +22,7 @@
 
   var label = document.createElement('span');
   panel.appendChild(label);
-  var LOG_PREFIX = '[status-title]';
+  var LOG_PREFIX = '[page-title-overlay]';
   function log() {
     try {
       var args = Array.prototype.slice.call(arguments);

@@ -1,6 +1,6 @@
 // Open the options page when the toolbar icon is clicked
 (function () {
-  var LOG_PREFIX = '[status-title]';
+  var LOG_PREFIX = '[page-title-overlay]';
   function log() {
     try {
       var args = Array.prototype.slice.call(arguments);
@@ -146,7 +146,7 @@
     if (cmApi && cmApi.create) {
       try {
         // id used to identify clicks
-        var CM_ID = 'status-title-open-options';
+        var CM_ID = 'page-title-overlay-open-options';
         // remove existing (safe no-op in many implementations)
         try {
           if (cmApi.remove) {

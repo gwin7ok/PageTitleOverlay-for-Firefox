@@ -15,7 +15,7 @@ Limitations
 Files
 
 - `manifest.json` - extension manifest
-- `status-title-content_script.js` - core overlay and logic
+- `page-title-overlay-content_script.js` - core overlay and logic
 - `style.css` - styles for the overlay
 
 Want further changes? I can add an options page, an allowlist, or a background script to coordinate tabs.

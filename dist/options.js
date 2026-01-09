@@ -1,6 +1,6 @@
 (function () {
   var DEFAULT = 'left-bottom';
-  function log() { try { var a = Array.prototype.slice.call(arguments); a.unshift('[status-title]'); if (console && console.debug) console.debug.apply(console, a); } catch (e) { } }
+  function log() { try { var a = Array.prototype.slice.call(arguments); a.unshift('[page-title-overlay]'); if (console && console.debug) console.debug.apply(console, a); } catch (e) { } }
   var form = document.getElementById('posForm');
   var status = document.getElementById('status');
   var enabledOn = document.getElementById('enabled_on');

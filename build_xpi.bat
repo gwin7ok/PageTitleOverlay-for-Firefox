@@ -13,8 +13,8 @@ if defined ARG (
 	)
 )
 
-rem Default output to repository root extension.xpi
-set OUT=%~dp0extension.xpi
+rem Default output to repository root PageTitleOverlay for Firefox.xpi
+set OUT=%~dp0PageTitleOverlay for Firefox.xpi
 if not "%ARG%"=="" set OUT=%~1
 echo Creating XPI from %SRC% -> %OUT%
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_xpi.ps1" "%SRC%" "%OUT%"

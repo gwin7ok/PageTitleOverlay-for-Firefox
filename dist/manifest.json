@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
-  "name": "Status Title Overlay (Waterfox)",
+  "name": "PageTitleOverlay for Firefox",
   "version": "0.1",
-  "short_name": "StatusTitle",
-  "description": "Displays page title in a small overlay near the bottom, hide on mouse/Shift — WebExtension version.",
+  "short_name": "PageTitleOverlay",
+  "description": "Displays the page title in a small overlay; configurable position, colors, and enabled state.",
   "permissions": [
     "<all_urls>",
     "storage",
@@ -11,11 +11,11 @@
   ],
   "browser_action": {
     "default_icon": "icon48.png",
-    "default_title": "Status Title Overlay"
+    "default_title": "PageTitleOverlay for Firefox"
   },
   "background": {
     "scripts": [
-      "status-title-background.js"
+      "page-title-overlay-background.js"
     ],
     "persistent": true
   },
@@ -25,7 +25,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "status-title-overlay@local",
+      "id": "page-title-overlay@local",
       "strict_min_version": "56.0"
     }
   },
@@ -35,7 +35,7 @@
         "<all_urls>"
       ],
       "js": [
-        "status-title-content_script.js"
+        "page-title-overlay-content_script.js"
       ],
       "css": [
         "style.css"

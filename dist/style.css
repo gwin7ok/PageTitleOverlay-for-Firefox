@@ -1,8 +1,8 @@
-#status-title-overlay {
+#page-title-overlay {
   position: fixed;
   left: 8px;
   bottom: 30px;
-  background: rgba(0,0,0,0.66);
+  background: rgba(0, 0, 0, 0.66);
   color: #fff;
   padding: 6px 10px;
   border-radius: 4px;
@@ -14,11 +14,13 @@
   transition: opacity 160ms linear, visibility 160ms linear;
   opacity: 1;
 }
-#status-title-overlay[force-hide] {
+
+#page-title-overlay[force-hide] {
   opacity: 0;
   visibility: hidden;
 }
-#status-title-overlay > #status-title-label {
+
+#page-title-overlay>#page-title-overlay-label {
   pointer-events: none;
   display: inline-block;
   max-width: 80vw;
