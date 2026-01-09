@@ -5,20 +5,7 @@
     var panel = document.createElement('div');
     panel.id = ID;
     panel.setAttribute('role', 'status');
-    panel.style.position = 'fixed';
-    panel.style.zIndex = '2147483647';
-    panel.style.pointerEvents = 'none';
-    panel.style.display = 'inline-block';
-    panel.style.boxSizing = 'border-box';
-    panel.style.padding = '2px 6px';
-    panel.style.background = 'rgba(0,0,0,0.6)';
-    panel.style.color = '#fff';
-    panel.style.fontSize = '20px';
-    panel.style.borderRadius = '3px';
-    panel.style.width = 'auto';
-    panel.style.overflow = 'hidden';
-    panel.style.whiteSpace = 'nowrap';
-    panel.style.textOverflow = 'ellipsis';
+    // Basic element created; visual/layout styles are defined in CSS
 
     var label = document.createElement('span');
     label.id = 'page-title-overlay-label';
@@ -54,7 +41,11 @@
         else if (pos === 'right-bottom') { panel.style.bottom = margin; panel.style.right = margin; }
         else { panel.style.bottom = margin; panel.style.left = margin; panel.style.maxWidth = ''; }
         if (pos.indexOf('right') !== -1) {
-            try { var avail = window.innerWidth - (MARGIN_PX * 2); if (avail > 0) panel.style.maxWidth = avail + 'px'; } catch (e) { panel.style.maxWidth = ''; }
+            try {
+                var cw = (document.documentElement && document.documentElement.clientWidth) ? document.documentElement.clientWidth : window.innerWidth;
+                var avail = cw - (MARGIN_PX * 2);
+                if (avail > 0) panel.style.maxWidth = avail + 'px';
+            } catch (e) { panel.style.maxWidth = ''; }
         }
         try { updateOverlayRect(); } catch (e) { }
     }
@@ -183,7 +174,7 @@
         });
     }
 
-    window.addEventListener('resize', function () { if (CURRENT_POS && CURRENT_POS.indexOf('right') !== -1) { try { var avail = window.innerWidth - (MARGIN_PX * 2); if (avail > 0) panel.style.maxWidth = avail + 'px'; } catch (e) { panel.style.maxWidth = ''; } } });
+    window.addEventListener('resize', function () { if (CURRENT_POS && CURRENT_POS.indexOf('right') !== -1) { try { var cw = (document.documentElement && document.documentElement.clientWidth) ? document.documentElement.clientWidth : window.innerWidth; var avail = cw - (MARGIN_PX * 2); if (avail > 0) panel.style.maxWidth = avail + 'px'; } catch (e) { panel.style.maxWidth = ''; } } });
 
     // Hide overlay while mouse is within its area so underlying content can be interacted with
     window.addEventListener('mousemove', function (ev) {
