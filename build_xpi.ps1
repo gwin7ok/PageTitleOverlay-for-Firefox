@@ -6,7 +6,7 @@ Param(
 Set-Location -LiteralPath $SourceDir
 $exclude = @('build_xpi.bat', 'build_xpi.ps1', '.git', '.gitignore')
 # Exclude legacy files that were renamed but may remain in dist
-$exclude += @('status-title-background.js', 'status-title-content_script.js', 'status-title-picker.js')
+$exclude = @('build_xpi.bat', 'build_xpi.ps1', '.git', '.gitignore')
 $files = Get-ChildItem -Recurse -File -Force | Where-Object { -not ($exclude -contains $_.Name) } | Select-Object -ExpandProperty FullName
 if ($files) {
     $outExt = [IO.Path]::GetExtension($OutPath)
