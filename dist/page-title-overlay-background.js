@@ -20,12 +20,17 @@
                 chrome.runtime.openOptionsPage();
                 return;
             }
-            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.create) {
+            if (typeof chrome !== 'undefined' &&
+                chrome.tabs &&
+                chrome.tabs.create &&
+                chrome.runtime &&
+                chrome.runtime.getURL) {
                 log('openOptions via chrome.tabs.create fallback');
-                chrome.tabs.create({ url: chrome.runtime.getURL('page-title-overlay-options.html') });
+                chrome.tabs.create({
+                    url: chrome.runtime.getURL('page-title-overlay-options.html')
+                });
                 return;
-            }
-            log('openOptions: no options API available');
+            } log('openOptions: no options API available');
         } catch (e) { log('openOptions threw', e && e.message); }
     }
 
