@@ -20,7 +20,7 @@ Installation (recommended)
 .\build_xpi.bat
 ```
 
-This produces [PageTitleOverlay for Firefox.xpi]("https://github.com/gwin7ok/PageTitleOverlay-for-Firefox/raw/main/PageTitleOverlay for Firefox.xpi") in the repository root (zips the `dist/` folder).
+This produces [PageTitleOverlay for Firefox.xpi](https://github.com/gwin7ok/PageTitleOverlay-for-Firefox/raw/main/PageTitleOverlay%20for%20Firefox.xpi) in the repository root (zips the `dist/` folder).
 
 3. Install into Firefox/Waterfox by dragging the generated `.xpi` file into the browser window and confirming the install.
 
